@@ -1,0 +1,8 @@
+id,sku,name,kind,secondaryKinds,length,minLength,maxLength,radius,radius2,angle,diverging,trackCenters,color,bridgeStyle,isTerminal,width,depth,buildingStyle,shapeType,shapeWidth,shapeHeight,shapeSide,shapeDiameter,notes
+expansion-78-108,20-050,Expansion Track 78–108mm,straight,,108,78,108,,,,,,,,,,,,,,,,,Adjustable straight expansion track; drag end handle to resize between 78mm and 108mm
+bumper-20-046,20-046,Bumper Type A,straight,,95,,,,,,,,,,true,,,,,,,,,Long bumper with concrete stop.
+bumper-20-047,20-047,Bumper Type B,straight,,95,,,,,,,,,,true,,,,,,,,,Long bumper with rock filled wood stop.
+bumper-20-048,20-048,Bumper Type C,straight,,50,,,,,,,,,,true,,,,,,,,,Short bumper with posts stop.
+bumper-20-060,20-060,Short Bumpber D,straight,,35,,,,,,,,,,true,,,,,,,,,Compact bumper.
+bumper-20-063,20-063,Illuminated Bumper Block,straight,,66,,,,,,,,,,true,,,,,,,,,Illuminated Bumpber with concrete stop.
+bumper-20-064,20-064,Illuminated Bumper Posts,straight,,66,,,,,,,,,,true,,,,,,,,,Illuminated Bumpber with posts stop.

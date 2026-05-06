@@ -1,0 +1,6 @@
+id,sku,name,kind,secondaryKinds,length,minLength,maxLength,radius,radius2,angle,diverging,trackCenters,color,bridgeStyle,isTerminal,width,depth,buildingStyle,shapeType,shapeWidth,shapeHeight,shapeSide,shapeDiameter,notes
+station-23-330,23-330,Local Station Building / Platform,building,,,,,,,,,,#9bd59a,,,124,72,station,,,,,,Top-down building footprint; no track connection nodes by default
+platform-23-170-end-left,23-170A,Island Platform 23-170 Left Curved End,building,,,,,,,,,,#cbd5e1,,,200,42,platform,,,,,,KATO 23-170 modular island platform curved end; platform nodes connect only to other platform nodes
+platform-23-170-center-a,23-170B,Island Platform 23-170 Center A,building,,,,,,,,,,#cbd5e1,,,248,42,platform,,,,,,KATO 23-170 modular island platform center section; platform nodes connect only to other platform nodes
+platform-23-170-center-b,23-170C,Island Platform 23-170 Center B,building,,,,,,,,,,#cbd5e1,,,248,42,platform,,,,,,KATO 23-170 modular island platform center section; platform nodes connect only to other platform nodes
+platform-23-170-end-right,23-170D,Island Platform 23-170 Right Curved End,building,,,,,,,,,,#cbd5e1,,,200,42,platform,,,,,,KATO 23-170 modular island platform curved end; platform nodes connect only to other platform nodes

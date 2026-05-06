@@ -1,0 +1,37 @@
+id,sku,name,kind,secondaryKinds,length,minLength,maxLength,radius,radius2,angle,diverging,trackCenters,color,bridgeStyle,isTerminal,width,depth,buildingStyle,shapeType,shapeWidth,shapeHeight,shapeSide,shapeDiameter,notes
+s248,20-000,S248 Straight,straight,,248,,,,,,,,,,,,,,,,,,,
+s186,20-010,S186 Straight,straight,,186,,,,,,,,,,,,,,,,,,,
+s124,20-020,S124 Straight,straight,,124,,,,,,,,,,,,,,,,,,,
+s64,20-030,S64 Straight,straight,,64,,,,,,,,,,,,,,,,,,,
+s62,20-040,S62 Straight,straight,,62,,,,,,,,,,,,,,,,,,,
+s62f,20-041,S62 Feeder,straight,,62,,,,,,,,,,,,,,,,,,,
+expansion-78-108,20-050,Expansion Track 78–108mm,straight,,108,78,108,,,,,,,,,,,,,,,,,Adjustable straight expansion track; drag end handle to resize between 78mm and 108mm
+s29,20-091,S29 Straight,straight,,29,,,,,,,,,,,,,,,,,,,
+s45.5,20-091,S45.5 Straight,straight,,45.5,,,,,,,,,,,,,,,,,,,
+s33,20-092,S33 Straight,straight,,33,,,,,,,,,,,,,,,,,,,
+s38,20-092,S38 Straight,straight,,38,,,,,,,,,,,,,,,,,,,
+r249-45,20-100,R249-45 Curve,curve,,,,,249,,45,,,,,,,,,,,,,,
+r249-15,20-101,R249-15 Curve,curve,,,,,249,,15,,,,,,,,,,,,,,
+r282-45,20-110,R282-45 Curve,curve,,,,,282,,45,,,,,,,,,,,,,,
+r282-15,20-111,R282-15 Curve,curve,,,,,282,,15,,,,,,,,,,,,,,
+r315-45,20-120,R315-45 Curve,curve,,,,,315,,45,,,,,,,,,,,,,,
+r315-15,20-121,R315-15 Curve,curve,,,,,315,,15,,,,,,,,,,,,,,
+r348-30,20-130,R348-30 Curve,curve,,,,,348,,30,,,,,,,,,,,,,,
+r348-45,20-132,R348-45 Curve,curve,,,,,348,,45,,,,,,,,,,,,,,
+r381-30,20-140,R381-30 Curve,curve,,,,,381,,30,,,,,,,,,,,,,,
+r381-10,20-141,R381-10 Curve,curve,,,,,381,,10,,,,,,,,,,,,,,
+r718-15,20-150,R718-15 Curve,curve,,,,,718,,15,,,,,,,,,,,,,,
+r481-15,20-160,R481-15 Curve,curve,,,,,481,,15,,,,,,,,,,,,,,
+r216-45,20-170,R216-45 Curve,curve,,,,,216,,45,,,,,,,,,,,,,,
+r216-15,20-171,R216-15 Curve,curve,,,,,216,,15,,,,,,,,,,,,,,
+r183-45,20-172,R183-45 Compact Curve,curve,,,,,183,,45,,,,,,,,,,,,,,Compact 183mm radius curve
+r150-45,20-174,R150-45 Curve,curve,,,,,150,,45,,,,,,,,,,,,,,
+r117-45,20-176,R117-45 Compact Curve,curve,,,,,117,,45,,,,,,,,,,,,,,Compact 117mm radius curve
+ep718-15l,20-202,#6 Left Turnout,turnout,,186,,,718,,15,left,,,,,,,,,,,,,
+ep718-15r,20-203,#6 Right Turnout,turnout,,186,,,718,,15,right,,,,,,,,,,,,,
+ep481-15l,20-220,#4 Left Turnout,turnout,,124,,,481,,15,left,,,,,,,,,,,,,Compact #4 turnout; three connection points
+ep481-15r,20-221,#4 Right Turnout,turnout,,124,,,481,,15,right,,,,,,,,,,,,,Compact #4 turnout; three connection points
+wy481-15,20-222,#2 Wye Turnout,turnout,,,,,481,,15,wye,,,,,,,,,,,,,Wye turnout with two R481 15° diverging routes
+crossing-15-left,20-300,15° Crossing Left,crossing,,186,,,,,15,left,,,,,,,,,,,,,"Single-track 15° left crossing, 186mm"
+crossing-15-right,20-301,15° Crossing Right,crossing,,186,,,,,15,right,,,,,,,,,,,,,"Single-track 15° right crossing, 186mm"
+crossing-90,20-320,90° Crossing,crossing,,124,,,,,90,,,,,,,,,,,,,,"Single-track 90° crossing, 124mm"

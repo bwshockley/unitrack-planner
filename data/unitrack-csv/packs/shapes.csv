@@ -1,0 +1,4 @@
+id,sku,name,kind,secondaryKinds,length,minLength,maxLength,radius,radius2,angle,diverging,trackCenters,color,bridgeStyle,isTerminal,width,depth,buildingStyle,shapeType,shapeWidth,shapeHeight,shapeSide,shapeDiameter,notes
+shape-rectangle,SHAPE-RECT,Custom Rectangle,shape,,,,,,,,,,#94a3b8,,,,,,rectangle,100,60,,,Customizable top-down rectangle; edit width and height when selected
+shape-triangle,SHAPE-TRI,Custom Triangle,shape,,,,,,,,,,#94a3b8,,,,,,triangle,,,80,,Customizable equilateral triangle; edit side length when selected
+shape-circle,SHAPE-CIR,Custom Circle,shape,,,,,,,,,,#94a3b8,,,,,,circle,,,,75,Customizable top-down circle; edit diameter when selected

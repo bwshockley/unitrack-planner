@@ -1,0 +1,89 @@
+id,sku,name,kind,secondaryKinds,length,minLength,maxLength,radius,radius2,angle,diverging,trackCenters,color,bridgeStyle,isTerminal,width,depth,buildingStyle,shapeType,shapeWidth,shapeHeight,shapeSide,shapeDiameter,notes
+shape-rectangle,SHAPE-RECT,Custom Rectangle,shape,,,,,,,,,,#94a3b8,,,,,,rectangle,100,60,,,Customizable top-down rectangle; edit width and height when selected
+shape-triangle,SHAPE-TRI,Custom Triangle,shape,,,,,,,,,,#94a3b8,,,,,,triangle,,,80,,Customizable equilateral triangle; edit side length when selected
+shape-circle,SHAPE-CIR,Custom Circle,shape,,,,,,,,,,#94a3b8,,,,,,circle,,,,75,Customizable top-down circle; edit diameter when selected
+station-23-330,23-330,Local Station Building / Platform,building,,,,,,,,,,#9bd59a,,,124,72,station,,,,,,Top-down building footprint; no track connection nodes by default
+platform-23-170-end-left,23-170A,Island Platform 23-170 Left Curved End,building,,,,,,,,,,#cbd5e1,,,200,42,platform,,,,,,KATO 23-170 modular island platform curved end; platform nodes connect only to other platform nodes
+platform-23-170-center-a,23-170B,Island Platform 23-170 Center A,building,,,,,,,,,,#cbd5e1,,,248,42,platform,,,,,,KATO 23-170 modular island platform center section; platform nodes connect only to other platform nodes
+platform-23-170-center-b,23-170C,Island Platform 23-170 Center B,building,,,,,,,,,,#cbd5e1,,,248,42,platform,,,,,,KATO 23-170 modular island platform center section; platform nodes connect only to other platform nodes
+platform-23-170-end-right,23-170D,Island Platform 23-170 Right Curved End,building,,,,,,,,,,#cbd5e1,,,200,42,platform,,,,,,KATO 23-170 modular island platform curved end; platform nodes connect only to other platform nodes
+s248,20-000,S248 Straight,straight,,248,,,,,,,,,,,,,,,,,,,
+s186,20-010,S186 Straight,straight,,186,,,,,,,,,,,,,,,,,,,
+s124,20-020,S124 Straight,straight,,124,,,,,,,,,,,,,,,,,,,
+s64,20-030,S64 Straight,straight,,64,,,,,,,,,,,,,,,,,,,
+s62,20-040,S62 Straight,straight,,62,,,,,,,,,,,,,,,,,,,
+s62f,20-041,S62 Feeder,straight,,62,,,,,,,,,,,,,,,,,,,
+expansion-78-108,20-050,Expansion Track 78–108mm,straight,,108,78,108,,,,,,,,,,,,,,,,,Adjustable straight expansion track; drag end handle to resize between 78mm and 108mm
+bumper-20-046,20-046,Bumper Type A,straight,,95,,,,,,,,,,true,,,,,,,,,Long bumper with concrete stop.
+bumper-20-047,20-047,Bumper Type B,straight,,95,,,,,,,,,,true,,,,,,,,,Long bumper with rock filled wood stop.
+bumper-20-048,20-048,Bumper Type C,straight,,50,,,,,,,,,,true,,,,,,,,,Short bumper with posts stop.
+bumper-20-060,20-060,Short Bumpber D,straight,,35,,,,,,,,,,true,,,,,,,,,Compact bumper.
+bumper-20-063,20-063,Illuminated Bumper Block,straight,,66,,,,,,,,,,true,,,,,,,,,Illuminated Bumpber with concrete stop.
+bumper-20-064,20-064,Illuminated Bumper Posts,straight,,66,,,,,,,,,,true,,,,,,,,,Illuminated Bumpber with posts stop.
+s29,20-091,S29 Straight,straight,,29,,,,,,,,,,,,,,,,,,,
+s45.5,20-091,S45.5 Straight,straight,,45.5,,,,,,,,,,,,,,,,,,,
+s33,20-092,S33 Straight,straight,,33,,,,,,,,,,,,,,,,,,,
+s38,20-092,S38 Straight,straight,,38,,,,,,,,,,,,,,,,,,,
+r249-45,20-100,R249-45 Curve,curve,,,,,249,,45,,,,,,,,,,,,,,
+r249-15,20-101,R249-15 Curve,curve,,,,,249,,15,,,,,,,,,,,,,,
+r282-45,20-110,R282-45 Curve,curve,,,,,282,,45,,,,,,,,,,,,,,
+r282-15,20-111,R282-15 Curve,curve,,,,,282,,15,,,,,,,,,,,,,,
+r315-45,20-120,R315-45 Curve,curve,,,,,315,,45,,,,,,,,,,,,,,
+r315-15,20-121,R315-15 Curve,curve,,,,,315,,15,,,,,,,,,,,,,,
+r348-30,20-130,R348-30 Curve,curve,,,,,348,,30,,,,,,,,,,,,,,
+r348-45,20-132,R348-45 Curve,curve,,,,,348,,45,,,,,,,,,,,,,,
+r381-30,20-140,R381-30 Curve,curve,,,,,381,,30,,,,,,,,,,,,,,
+r381-10,20-141,R381-10 Curve,curve,,,,,381,,10,,,,,,,,,,,,,,
+r718-15,20-150,R718-15 Curve,curve,,,,,718,,15,,,,,,,,,,,,,,
+r481-15,20-160,R481-15 Curve,curve,,,,,481,,15,,,,,,,,,,,,,,
+r216-45,20-170,R216-45 Curve,curve,,,,,216,,45,,,,,,,,,,,,,,
+r216-15,20-171,R216-15 Curve,curve,,,,,216,,15,,,,,,,,,,,,,,
+r183-45,20-172,R183-45 Compact Curve,curve,,,,,183,,45,,,,,,,,,,,,,,Compact 183mm radius curve
+r150-45,20-174,R150-45 Curve,curve,,,,,150,,45,,,,,,,,,,,,,,
+r117-45,20-176,R117-45 Compact Curve,curve,,,,,117,,45,,,,,,,,,,,,,,Compact 117mm radius curve
+ep718-15l,20-202,#6 Left Turnout,turnout,,186,,,718,,15,left,,,,,,,,,,,,,
+ep718-15r,20-203,#6 Right Turnout,turnout,,186,,,718,,15,right,,,,,,,,,,,,,
+ep481-15l,20-220,#4 Left Turnout,turnout,,124,,,481,,15,left,,,,,,,,,,,,,Compact #4 turnout; three connection points
+ep481-15r,20-221,#4 Right Turnout,turnout,,124,,,481,,15,right,,,,,,,,,,,,,Compact #4 turnout; three connection points
+wy481-15,20-222,#2 Wye Turnout,turnout,,,,,481,,15,wye,,,,,,,,,,,,,Wye turnout with two R481 15° diverging routes
+single-crossover-left,20-230,Double Track Single Crossover Left,crossing,Double,248,,,,,,left,33,,,,,,,,,,,,"#4 single crossover, left, 248mm overall length"
+single-crossover-right,20-231,Double Track Single Crossover Right,crossing,Double,248,,,,,,right,33,,,,,,,,,,,,"#4 single crossover, right, 248mm overall length"
+crossing-15-left,20-300,15° Crossing Left,crossing,,186,,,,,15,left,,,,,,,,,,,,,"Single-track 15° left crossing, 186mm"
+crossing-15-right,20-301,15° Crossing Right,crossing,,186,,,,,15,right,,,,,,,,,,,,,"Single-track 15° right crossing, 186mm"
+crossing-90,20-320,90° Crossing,crossing,,124,,,,,90,,,,,,,,,,,,,,"Single-track 90° crossing, 124mm"
+double-crossover,20-210,Double Crossover,crossing,Double,310,,,,,,,33,,,,,,,,,,,,Four main connection points on 33mm track centers
+viaduct-s248,20-400,S248 Single Track Viaduct,straight,Viaduct,248,,,,,,,,#8f9499,,,,,,,,,,,"Single-track straight viaduct, 248mm"
+double-viaduct-s248,20-401,Double Straight Viaduct 248mm,straight,Double|Viaduct,248,,,,,,,33,#8f9499,,,,,,,,,,,Double-track elevated viaduct straight section on 33mm centers with roadbeds plus filled center deck
+viaduct-s186,20-410,S186 Single Track Viaduct,straight,Viaduct,186,,,,,,,,#8f9499,,,,,,,,,,,"Single-track straight viaduct, 186mm"
+double-viaduct-s186,20-411,Double Straight Viaduct 186mm,straight,Double|Viaduct,186,,,,,,,33,#8f9499,,,,,,,,,,,"Double-track concrete slab viaduct, 186mm"
+viaduct-s124,20-420,S124 Single Track Viaduct,straight,Viaduct,124,,,,,,,,#8f9499,,,,,,,,,,,"Single-track straight viaduct, 124mm"
+double-viaduct-s124,20-422,Double Straight Viaduct 124mm,straight,Double|Viaduct,124,,,,,,,33,#8f9499,,,,,,,,,,,"Double-track concrete slab viaduct, 124mm"
+viaduct-s62,20-440,S62 Single Track Viaduct,straight,Viaduct,62,,,,,,,,#8f9499,,,,,,,,,,,"Single-track straight viaduct, 62mm"
+viaduct-r249-45,20-505,R249-45 Single Track Viaduct Curve,curve,Viaduct,,,,249,,45,,,#8f9499,,,,,,,,,,,"Single-track viaduct curve, R249 45°"
+viaduct-r282-45,20-510,R282-45 Single Track Viaduct Curve,curve,Viaduct,,,,282,,45,,,#8f9499,,,,,,,,,,,"Single-track viaduct curve, R282 45°"
+viaduct-r315-45,20-520,R315-45 Viaduct Curve,curve,Viaduct,,,,315,,45,,,#8f9499,,,,,,,,,,,Elevated viaduct curve section with side walls
+viaduct-r348-45,20-530,R348-45 Single Track Viaduct Curve,curve,Viaduct,,,,348,,45,,,#8f9499,,,,,,,,,,,"Single-track viaduct curve, R348 45°"
+viaduct-r348-30,20-531,R348-30 Single Track Viaduct Curve,curve,Viaduct,,,,348,,30,,,#8f9499,,,,,,,,,,,"Single-track viaduct curve, R348 30°"
+viaduct-r381-30,20-540,R381-30 Single Track Viaduct Curve,curve,Viaduct,,,,381,,30,,,#8f9499,,,,,,,,,,,"Single-track viaduct curve, R381 30°"
+truss-bridge-red-brown-s248,20-429,S248 Single Track Truss Bridge Red Brown,straight,Bridge,248,,,,,,,,#7a3f2a,truss,,,,,,,,,,"Single-track truss bridge, reddish brown, 248mm"
+truss-bridge-red-s248,20-430,S248 Single Track Truss Bridge Red,straight,Bridge,248,,,,,,,,#a53b32,truss,,,,,,,,,,"Single-track truss bridge, red, 248mm"
+truss-bridge-green-s248,20-431,S248 Single Track Truss Bridge Green,straight,Bridge,248,,,,,,,,#4f7f4f,truss,,,,,,,,,,"Single-track truss bridge, green, 248mm"
+truss-bridge-gray-s248,20-432,S248 Single Track Truss Bridge Gray,straight,Bridge,248,,,,,,,,#777777,truss,,,,,,,,,,"Single-track truss bridge, gray, 248mm"
+truss-bridge-silver-s248,20-433,S248 Single Track Truss Bridge Silver,straight,Bridge,248,,,,,,,,#9ca3af,truss,,,,,,,,,,"Single-track truss bridge, silver, 248mm"
+truss-bridge-black-s248,20-434,S248 Single Track Truss Bridge Black,straight,Bridge,248,,,,,,,,#333333,truss,,,,,,,,,,"Single-track truss bridge, black, 248mm"
+plate-girder-bridge-red-s186,20-450,S186 Single Track Plate Girder Bridge Red,straight,Bridge,186,,,,,,,,#a53b32,plate-girder,,,,,,,,,,"Single-track plate girder bridge, red, 186mm"
+plate-girder-bridge-green-s186,20-451,S186 Single Track Plate Girder Bridge Green,straight,Bridge,186,,,,,,,,#4f7f4f,plate-girder,,,,,,,,,,"Single-track plate girder bridge, green, 186mm"
+plate-girder-bridge-gray-s186,20-452,S186 Single Track Plate Girder Bridge Gray,straight,Bridge,186,,,,,,,,#777777,plate-girder,,,,,,,,,,"Single-track plate girder bridge, gray, 186mm"
+plate-girder-bridge-silver-s186,20-453,S186 Single Track Plate Girder Bridge Silver,straight,Bridge,186,,,,,,,,#9ca3af,plate-girder,,,,,,,,,,"Single-track plate girder bridge, silver, 186mm"
+plate-girder-bridge-black-s186,20-454,S186 Single Track Plate Girder Bridge Black,straight,Bridge,186,,,,,,,,#333333,plate-girder,,,,,,,,,,"Single-track plate girder bridge, black, 186mm"
+deck-girder-bridge-red-s124,20-460,S124 Single Track Deck Girder Bridge Red,straight,Bridge,124,,,,,,,,#a53b32,deck-girder,,,,,,,,,,"Single-track deck girder bridge, red, 124mm"
+deck-girder-bridge-green-s124,20-461,S124 Single Track Deck Girder Bridge Green,straight,Bridge,124,,,,,,,,#4f7f4f,deck-girder,,,,,,,,,,"Single-track deck girder bridge, green, 124mm"
+deck-girder-bridge-gray-s124,20-462,S124 Single Track Deck Girder Bridge Gray,straight,Bridge,124,,,,,,,,#777777,deck-girder,,,,,,,,,,"Single-track deck girder bridge, gray, 124mm"
+deck-girder-bridge-black-s124,20-464,S124 Single Track Deck Girder Bridge Black,straight,Bridge,124,,,,,,,,#333333,deck-girder,,,,,,,,,,"Single-track deck girder bridge, black, 124mm"
+bridge-r448-15-red,20-465,R448-15 Curved Deck Girder Bridge Red,curve,Bridge,,,,448,,15,,,#a53b32,deck-girder,,,,,,,,,,"Single-track curved deck girder bridge, red"
+bridge-r448-15-green,20-466,R448-15 Curved Deck Girder Bridge Green,curve,Bridge,,,,448,,15,,,#4f7f4f,deck-girder,,,,,,,,,,"Single-track curved deck girder bridge, green"
+bridge-r448-15-gray,20-467,R448-15 Curved Deck Girder Bridge Gray,curve,Bridge,,,,448,,15,,,#777777,deck-girder,,,,,,,,,,"Single-track curved deck girder bridge, gray"
+bridge-r481-15-red,20-470,R481-15 Curved Deck Girder Bridge Red,curve,Bridge,,,,481,,15,,,#a53b32,deck-girder,,,,,,,,,,"Single-track curved deck girder bridge, red"
+bridge-r481-15-green,20-471,R481-15 Curved Deck Girder Bridge Green,curve,Bridge,,,,481,,15,,,#4f7f4f,deck-girder,,,,,,,,,,"Single-track curved deck girder bridge, green"
+bridge-r481-15-gray,20-472,R481-15 Curved Deck Girder Bridge Gray,curve,Bridge,,,,481,,15,,,#777777,deck-girder,,,,,,,,,,"Single-track curved deck girder bridge, gray"
+bridge-s248,20-435,S248 Truss Bridge,straight,Bridge,248,,,,,,,,#777777,truss,,,,,,,,,,Bridge section with straight truss connection geometry

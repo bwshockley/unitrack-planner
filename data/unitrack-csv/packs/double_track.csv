@@ -1,0 +1,7 @@
+id,sku,name,kind,secondaryKinds,length,minLength,maxLength,radius,radius2,angle,diverging,trackCenters,color,bridgeStyle,isTerminal,width,depth,buildingStyle,shapeType,shapeWidth,shapeHeight,shapeSide,shapeDiameter,notes
+single-crossover-left,20-230,Double Track Single Crossover Left,crossing,Double,248,,,,,,left,33,,,,,,,,,,,,"#4 single crossover, left, 248mm overall length"
+single-crossover-right,20-231,Double Track Single Crossover Right,crossing,Double,248,,,,,,right,33,,,,,,,,,,,,"#4 single crossover, right, 248mm overall length"
+double-crossover,20-210,Double Crossover,crossing,Double,310,,,,,,,33,,,,,,,,,,,,Four main connection points on 33mm track centers
+double-viaduct-s248,20-401,Double Straight Viaduct 248mm,straight,Double|Viaduct,248,,,,,,,33,#8f9499,,,,,,,,,,,Double-track elevated viaduct straight section on 33mm centers with roadbeds plus filled center deck
+double-viaduct-s186,20-411,Double Straight Viaduct 186mm,straight,Double|Viaduct,186,,,,,,,33,#8f9499,,,,,,,,,,,"Double-track concrete slab viaduct, 186mm"
+double-viaduct-s124,20-422,Double Straight Viaduct 124mm,straight,Double|Viaduct,124,,,,,,,33,#8f9499,,,,,,,,,,,"Double-track concrete slab viaduct, 124mm"
