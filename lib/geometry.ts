@@ -81,8 +81,8 @@ export function localConnectors(part: TrackPart, flip = false, placed?: Pick<Pla
       const compatibilityForPort = (key: string): Pick<Pose, 'compatibilityTag' | 'compatibleTags'> => {
         if (concreteDoubleCurveSkus.includes(part.sku)) return { compatibilityTag: coreTag, compatibleTags: [coreTag, transitionTag] };
         const transitionBaseSku = part.sku.slice(0, -1);
-        if (concreteDoubleTransitionSkus.includes(transitionBaseSku) && part.sku.endsWith('L') && key.endsWith('-b')) return { compatibilityTag: transitionTag, compatibleTags: [coreTag] };
-        if (concreteDoubleTransitionSkus.includes(transitionBaseSku) && part.sku.endsWith('R') && key.endsWith('-a')) return { compatibilityTag: transitionTag, compatibleTags: [coreTag] };
+        if (concreteDoubleTransitionSkus.includes(transitionBaseSku) && part.sku.endsWith('L') && key.endsWith('-b')) return { compatibilityTag: transitionTag, compatibleTags: [coreTag, transitionTag] };
+        if (concreteDoubleTransitionSkus.includes(transitionBaseSku) && part.sku.endsWith('R') && key.endsWith('-a')) return { compatibilityTag: transitionTag, compatibleTags: [coreTag, transitionTag] };
         return {};
       };
       const centerRadius = (r1 + r2) / 2;
