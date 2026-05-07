@@ -12,7 +12,6 @@ const BOARD_H = 1000;
 const GRID = 33;
 const SNAP_DISTANCE_MM = 24;
 const AUTOSAVE_LAYOUT_KEY = 'unitrack-planner-layout-autosave';
-type Tool = 'select' | 'place';
 type Theme = 'dark' | 'light';
 type RenderDetail = 'high' | 'low';
 type PartFilter = 'all' | TrackKind | SecondaryTrackKind;
@@ -34,8 +33,7 @@ function mm(v: number) { return v * PX_PER_MM; }
 function fromPx(v: number) { return v / PX_PER_MM; }
 
 export default function Page() {
-  const [tool, setTool] = useState<Tool>('place');
-  const [selectedPartId, setSelectedPartId] = useState('s248');
+  const [selectedPartId, setSelectedPartId] = useState<string | null>(null);
   const [theme, setTheme] = useState<Theme>('light');
   const [renderDetail, setRenderDetail] = useState<RenderDetail>('high');
   const [mounted, setMounted] = useState(false);
@@ -406,7 +404,6 @@ export default function Page() {
     recordHistory();
     setItems(prev => [...prev, item]);
     setSelectedUids([item.uid]);
-    setTool('select');
     setMessage('Piece placed. If it snapped to existing track, all of its nodes were set to the target elevation.');
   }
 
@@ -430,7 +427,6 @@ export default function Page() {
     recordHistory();
     setItems(prev => [...prev, ...pasted]);
     setSelectedUids(pasted.map(item => item.uid));
-    setTool('select');
     setMessage(`Pasted ${pasted.length} copied track piece${pasted.length === 1 ? '' : 's'}.`);
   }
 
@@ -656,7 +652,6 @@ export default function Page() {
 
   function selectAllPlaced() {
     setSelectedUids(editableVisibleItems.map(i => i.uid));
-    setTool('select');
     setMessage(editableVisibleItems.length ? `Selected all ${editableVisibleItems.length} editable visible pieces.` : 'No editable visible pieces to select.');
   }
 
@@ -758,7 +753,6 @@ export default function Page() {
     if (!item || isItemLocked(item)) return;
     setSelectedUids([uid]);
     setSelectedNode({ uid, key });
-    setTool('select');
     const part = partMap.get(item.partId);
     const port = part ? connectors(part, item).find((connector, index) => (connector.key ?? String(index)) === key) : undefined;
     setMessage(`Selected node ${port?.label ?? key} for elevation editing.`);
@@ -1308,7 +1302,6 @@ export default function Page() {
       min: part.minLength ?? 78,
       max: part.maxLength ?? 108,
     };
-    setTool('select');
     setGhost(null);
     setSelectedUids([item.uid]);
     e.currentTarget.setPointerCapture(e.pointerId);
@@ -1340,7 +1333,6 @@ export default function Page() {
     e.stopPropagation();
     if (!isItemVisible(item) || isItemLocked(item)) { setMessage(isItemLocked(item) ? 'That layer is locked. Unlock it to edit those tracks.' : 'That layer is hidden.'); return; }
     (e.currentTarget as SVGGElement).setPointerCapture(e.pointerId);
-    setTool('select');
     setGhost(null);
     if (e.shiftKey) { selectChainTo(item.uid); return; }
     const additive = e.ctrlKey || e.metaKey;
@@ -1525,10 +1517,6 @@ export default function Page() {
           <button onClick={resetPalette} className="ui-button ui-button-sm btn rounded-xl px-2 py-2 text-[11px]">Reset</button>
           <input ref={paletteFileRef} type="file" accept=".csv,text/csv" className="hidden" onChange={e => { const file = e.target.files?.[0]; if (file) importPaletteCsv(file); e.currentTarget.value = ''; }} />
         </div>
-        <div className="mb-2 grid shrink-0 grid-cols-2 gap-2">
-          <button onClick={() => setTool('place')} className={`ui-button ui-button-md rounded-xl px-3 py-2 text-sm ${tool === 'place' ? 'btn-success' : 'btn'}`}>Place</button>
-          <button onClick={() => setTool('select')} className={`ui-button ui-button-md rounded-xl px-3 py-2 text-sm ${tool === 'select' ? 'btn-success' : 'btn'}`}><MousePointer2 className="h-4 w-4"/>Select</button>
-        </div>
         <div className="mb-2 shrink-0">
           <label className="field flex items-center gap-2 rounded-xl px-2 py-2">
             <Search className="h-4 w-4 shrink-0 muted" />
@@ -1588,15 +1576,16 @@ export default function Page() {
             key={p.id}
             draggable
             onDragStart={e => {
-              setSelectedPartId(p.id);
               setDropPartId(p.id);
-              setTool('place');
               e.dataTransfer.effectAllowed = 'copy';
               e.dataTransfer.setData('application/unitrack-part', p.id);
               e.dataTransfer.setData('text/plain', p.id);
             }}
             onDragEnd={() => { setGhost(null); setDropPartId(null); }}
-            onClick={() => { setSelectedPartId(p.id); setTool('place'); }}
+            onClick={() => {
+              setSelectedPartId(current => current === p.id ? null : p.id);
+              setMessage(selectedPartId === p.id ? 'Part placement cleared.' : `Selected ${p.sku} ${p.name} for repeated placement.`);
+            }}
             className={`w-full cursor-grab rounded-xl border p-2 text-left text-xs transition active:cursor-grabbing ${selectedPartId === p.id ? 'part-card-selected' : 'part-card'}`}
           >
             <div className="font-semibold">{p.sku} {p.name}</div>
@@ -1628,7 +1617,8 @@ export default function Page() {
             onDragOver={e => {
               e.preventDefault();
               const svg = e.currentTarget;
-              const partId = e.dataTransfer.getData('application/unitrack-part') || dropPartId || selectedPartId;
+              const partId = e.dataTransfer.getData('application/unitrack-part') || dropPartId;
+              if (!partId) return;
               const p = svgPointFromClient(svg, e.clientX, e.clientY);
               setGhost(previewPart(partId, p.x, p.y, 0));
               e.dataTransfer.dropEffect = 'copy';
@@ -1638,7 +1628,8 @@ export default function Page() {
             }}
             onDrop={e => {
               e.preventDefault();
-              const partId = e.dataTransfer.getData('application/unitrack-part') || dropPartId || selectedPartId;
+              const partId = e.dataTransfer.getData('application/unitrack-part') || dropPartId;
+              if (!partId) return;
               const p = svgPointFromClient(e.currentTarget, e.clientX, e.clientY);
               setGhost(null);
               setDropPartId(null);
@@ -1689,20 +1680,16 @@ export default function Page() {
                 setSelectionBox({ x1: boxDrag.current.x, y1: boxDrag.current.y, x2: p.x, y2: p.y });
                 return;
               }
-              if (tool === 'place') setGhost(previewPart(selectedPartId, p.x, p.y, 0));
+              if (selectedPartId) setGhost(previewPart(selectedPartId, p.x, p.y, 0));
             }}
             onPointerLeave={() => { if (!dropPartId) setGhost(null); }}
             onPointerDown={e => {
-              if (e.target === e.currentTarget && tool === 'place') {
+              if (e.target === e.currentTarget && selectedPartId) {
                 const p = svgPoint(e); placePart(selectedPartId, p.x, p.y);
               } else if (e.target === e.currentTarget) {
-                if (tool === 'select') {
-                  const p = svgPoint(e);
-                  boxDrag.current = { x: p.x, y: p.y };
-                  setSelectionBox({ x1: p.x, y1: p.y, x2: p.x, y2: p.y });
-                } else {
-                  setSelectedUids([]);
-                }
+                const p = svgPoint(e);
+                boxDrag.current = { x: p.x, y: p.y };
+                setSelectionBox({ x1: p.x, y1: p.y, x2: p.x, y2: p.y });
               }
             }}
             onPointerUp={() => {
