@@ -1521,7 +1521,7 @@ export function TrackShape({
           ? (useLowDetail ? lowDetailDoubleWideningShape(effectiveLength, part.id === 'double-widening-right-310') : doubleWideningShape(effectiveLength, part.id === 'double-widening-right-310'))
           : rendererFamily === 'double-slab-track'
             ? (useLowDetail ? lowDetailDoubleStraightShape(effectiveLength, part.trackCenters ?? 33) : doubleSlabStraightShape(effectiveLength, part.trackCenters ?? 33))
-          : rendererFamily === 'double-track' || rendererFamily === 'double-viaduct' || rendererFamily === 'double-slab-track'
+          : rendererFamily === 'double-track' || rendererFamily === 'double-viaduct'
             ? (useLowDetail ? lowDetailDoubleStraightShape(effectiveLength, part.trackCenters ?? 33) : doubleStraightShape(effectiveLength, part.trackCenters ?? 33))
           : rendererFamily === 'standard-track' && part.kind === 'straight' && !isConcreteTiePart
             ? (useLowDetail ? lowDetailRailLine(0, 0, effectiveLength, 0, 'low-standard-straight') : standardSingleTrackShape(effectiveLength))
