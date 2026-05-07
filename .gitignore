@@ -2,7 +2,6 @@
 node_modules/
 
 # npm install output
-package-lock.json
 npm-debug.log*
 
 # Next.js
