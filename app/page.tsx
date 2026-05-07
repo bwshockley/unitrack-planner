@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowDown, ArrowUp, ChevronDown, Clipboard, ClipboardPaste, Download, Eye, EyeOff, FileSpreadsheet, FlipHorizontal2, FolderOpen, Grid3X3, Lock, Maximize2, Moon, MousePointer2, Plus, RotateCcw, RotateCw, Save, Sun, Trash2, Unlock, Upload, ZoomIn, ZoomOut } from 'lucide-react';
+import { ArrowDown, ArrowUp, ChevronDown, Clipboard, ClipboardPaste, Download, Eye, EyeOff, FilePlus2, FileSpreadsheet, FlipHorizontal2, FolderOpen, Grid3X3, Lock, Maximize2, Moon, MousePointer2, Plus, RotateCcw, RotateCw, Save, Sun, Trash2, Unlock, Upload, ZoomIn, ZoomOut } from 'lucide-react';
 import { PRIMARY_TRACK_KINDS, SECONDARY_TRACK_KINDS, UNITRACK_PARTS, partLabel, SecondaryTrackKind, TrackKind, TrackPart } from '@/lib/unitrack';
 import { clamp, connectors, degToRad, isDoubleTrack, isExpansionTrack, nodeHeight, norm, partLength, PlacedTrack, Pose, snap } from '@/lib/geometry';
 import { TrackShape } from '@/lib/renderers/TrackShape';
@@ -25,6 +25,7 @@ type StockRow = { sku: string; name: string; required: number; owned: number; pu
 type DialogState =
   | { kind: 'save-layout'; fileName: string }
   | { kind: 'save-palette'; fileName: string }
+  | { kind: 'new-layout' }
   | null;
 const BASE_LAYER_ID = 'base';
 
@@ -1110,6 +1111,30 @@ export default function Page() {
     setMessage(`Imported owned stock for ${Object.keys(next).length} SKU${Object.keys(next).length === 1 ? '' : 's'}.`);
   }
 
+  function resetLayoutState() {
+    localStorage.removeItem(AUTOSAVE_LAYOUT_KEY);
+    setItems([]);
+    setLayers([{ id: BASE_LAYER_ID, name: 'Layer 1', visible: true, locked: false }]);
+    setActiveLayerId(BASE_LAYER_ID);
+    setSelectedUids([]);
+    setSelectedNode(null);
+    setRunSuggestions([]);
+    setGhost(null);
+    setDropPartId(null);
+    historyPastRef.current = [];
+    historyFutureRef.current = [];
+    setHistoryTick(t => t + 1);
+    setMessage('Started a new layout and cleared autosave.');
+  }
+
+  function newLayout() {
+    if (items.length > 0 || layers.length > 1) {
+      setDialog({ kind: 'new-layout' });
+      return;
+    }
+    resetLayoutState();
+  }
+
 
   async function importJson(file: File) {
     const data = JSON.parse(await file.text());
@@ -1371,11 +1396,25 @@ export default function Page() {
   function dialogTitle() {
     if (!dialog) return '';
     if (dialog.kind === 'save-layout') return 'Name layout file';
+    if (dialog.kind === 'new-layout') return 'Start a new layout?';
     return 'Name palette file';
   }
 
   function dialogBody() {
     if (!dialog) return null;
+    if (dialog.kind === 'new-layout') {
+      return <div className="space-y-3 text-sm">
+        <div className="rounded-xl border border-rose-500/35 bg-rose-500/10 p-3">
+          <div className="strong font-semibold">This clears the current layout.</div>
+          <p className="muted mt-1 text-xs">Placed parts, layers, selection, suggestions, and the local autosave will be reset.</p>
+        </div>
+        <div className="grid grid-cols-3 gap-2 text-center text-xs">
+          <div className="rounded-lg bg-[var(--panel-bg)] p-2"><b className="block text-base">{items.length}</b><span className="muted">pieces</span></div>
+          <div className="rounded-lg bg-[var(--panel-bg)] p-2"><b className="block text-base">{layers.length}</b><span className="muted">layers</span></div>
+          <div className="rounded-lg bg-[var(--panel-bg)] p-2"><b className="block text-base">{selectedUids.length}</b><span className="muted">selected</span></div>
+        </div>
+      </div>;
+    }
     const extension = dialog.kind === 'save-layout' ? '.json' : '.csv';
     return <label className="block text-sm">
       <span className="muted mb-2 block">File name</span>
@@ -1400,6 +1439,10 @@ export default function Page() {
     if (!dialog) return;
     if (dialog.kind === 'save-layout') exportJsonNow(dialog.fileName);
     else if (dialog.kind === 'save-palette') exportPaletteCsvNow(dialog.fileName);
+    else if (dialog.kind === 'new-layout') {
+      setDialog(null);
+      resetLayoutState();
+    }
   }
 
   if (!mounted) {
@@ -1424,6 +1467,7 @@ export default function Page() {
             </span>
             <span>{isDark ? 'Light' : 'Dark'}</span>
           </button>
+          <button onClick={newLayout} className="ui-button ui-button-md rounded-xl btn px-3 py-2 text-sm font-medium"><FilePlus2 className="h-4 w-4"/>New</button>
           <button onClick={exportJson} className="ui-button ui-button-md rounded-xl btn-primary px-3 py-2 text-sm font-medium"><Save className="h-4 w-4"/>Save</button>
           <label className="ui-button ui-button-md rounded-xl btn px-3 py-2 text-sm font-medium"><FolderOpen className="h-4 w-4"/>Load<input type="file" accept="application/json" className="hidden" onChange={e => e.target.files?.[0] && importJson(e.target.files[0])}/></label>
         </div>
@@ -1901,14 +1945,15 @@ export default function Page() {
             <h2 id="planner-dialog-title" className="text-lg font-semibold">{dialogTitle()}</h2>
             {dialog.kind === 'save-layout' && <p className="muted mt-1 text-xs">Choose a name before saving the layout JSON.</p>}
             {dialog.kind === 'save-palette' && <p className="muted mt-1 text-xs">Choose a name before saving the palette CSV.</p>}
+            {dialog.kind === 'new-layout' && <p className="muted mt-1 text-xs">Create a clean workspace and remove the current autosave.</p>}
           </div>
           <button onClick={() => setDialog(null)} className="ui-button ui-button-sm btn rounded-lg px-2 py-1 text-xs" aria-label="Close dialog">×</button>
         </div>
         <div className="subpanel rounded-xl p-3">{dialogBody()}</div>
         <div className="mt-4 flex justify-end gap-2">
           <button onClick={() => setDialog(null)} className="ui-button ui-button-md btn rounded-xl px-4 py-2 text-sm">Cancel</button>
-          <button onClick={confirmDialogAction} className="ui-button ui-button-md btn-primary rounded-xl px-4 py-2 text-sm font-medium">
-            Save
+          <button onClick={confirmDialogAction} className={`ui-button ui-button-md rounded-xl px-4 py-2 text-sm font-medium ${dialog.kind === 'new-layout' ? 'btn-danger' : 'btn-primary'}`}>
+            {dialog.kind === 'new-layout' ? 'Start New' : 'Save'}
           </button>
         </div>
       </div>
