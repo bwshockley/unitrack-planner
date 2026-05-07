@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowDown, ArrowUp, Clipboard, ClipboardPaste, Download, Eye, EyeOff, FileSpreadsheet, FolderOpen, Grid3X3, Lock, Maximize2, Moon, MousePointer2, Plus, RotateCcw, RotateCw, Save, Sun, Trash2, Unlock, Upload, ZoomIn, ZoomOut } from 'lucide-react';
+import { ArrowDown, ArrowUp, ChevronDown, Clipboard, ClipboardPaste, Download, Eye, EyeOff, FileSpreadsheet, FlipHorizontal2, FolderOpen, Grid3X3, Lock, Maximize2, Moon, MousePointer2, Plus, RotateCcw, RotateCw, Save, Sun, Trash2, Unlock, Upload, ZoomIn, ZoomOut } from 'lucide-react';
 import { PRIMARY_TRACK_KINDS, SECONDARY_TRACK_KINDS, UNITRACK_PARTS, partLabel, SecondaryTrackKind, TrackKind, TrackPart } from '@/lib/unitrack';
 import { clamp, connectors, degToRad, isDoubleTrack, isExpansionTrack, nodeHeight, norm, partLength, PlacedTrack, Pose, snap } from '@/lib/geometry';
 import { TrackShape } from '@/lib/renderers/TrackShape';
@@ -13,7 +13,9 @@ const GRID = 33;
 const SNAP_DISTANCE_MM = 24;
 type Tool = 'select' | 'place';
 type Theme = 'dark' | 'light';
+type RenderDetail = 'high' | 'low';
 type PartFilter = 'all' | TrackKind | SecondaryTrackKind;
+type PartFilterMode = 'and' | 'or';
 type GhostTrack = { partId: string; x: number; y: number; rotation: number; flip?: boolean; layerId?: string } | null;
 type RunSuggestion = { label: string; gap: number; error: number; parts: { partId: string; length: number }[] };
 type LayoutLayer = { id: string; name: string; visible: boolean; locked: boolean };
@@ -33,9 +35,11 @@ export default function Page() {
   const [tool, setTool] = useState<Tool>('place');
   const [selectedPartId, setSelectedPartId] = useState('s248');
   const [theme, setTheme] = useState<Theme>('light');
+  const [renderDetail, setRenderDetail] = useState<RenderDetail>('high');
   const [mounted, setMounted] = useState(false);
   const [shapeColors, setShapeColors] = useState<string[]>([]);
   const [partFilters, setPartFilters] = useState<PartFilter[]>([]);
+  const [partFilterMode, setPartFilterMode] = useState<PartFilterMode>('or');
   const [parts, setParts] = useState<TrackPart[]>(UNITRACK_PARTS);
   const [items, setItems] = useState<PlacedTrack[]>([]);
   const [ownedStock, setOwnedStock] = useState<Record<string, number>>({});
@@ -167,8 +171,12 @@ export default function Page() {
   }, [frameSize.width, frameSize.height, zoom, layoutBounds]);
   const filteredParts = useMemo(() => {
     if (partFilters.length === 0 || partFilters.includes('all')) return parts;
-    return parts.filter(p => partFilters.some(filter => p.kind === filter || p.secondaryKinds?.includes(filter as SecondaryTrackKind)));
-  }, [parts, partFilters]);
+    const selectedFilters = partFilters.filter(filter => filter !== 'all');
+    const partHasFilter = (part: TrackPart, filter: PartFilter) => part.kind === filter || part.secondaryKinds?.includes(filter as SecondaryTrackKind);
+    return parts.filter(part => partFilterMode === 'and'
+      ? selectedFilters.every(filter => partHasFilter(part, filter))
+      : selectedFilters.some(filter => partHasFilter(part, filter)));
+  }, [parts, partFilters, partFilterMode]);
   const isDark = theme === 'dark';
   const selectedUid = selectedUids[selectedUids.length - 1] ?? null;
   const selectedItem = items.find(i => i.uid === selectedUid);
@@ -204,6 +212,9 @@ export default function Page() {
         y: connector.y,
         heading: connector.heading,
         nodeKind: connector.nodeKind,
+        partSku: connector.partSku,
+        compatibilityTag: connector.compatibilityTag,
+        compatibleTags: connector.compatibleTags,
         height: nodeHeight(item, connector.key ?? String(index)),
       }));
       states.set(item.uid, itemPorts.map(() => false));
@@ -270,6 +281,8 @@ export default function Page() {
     if (a.nodeKind === 'platform' || b.nodeKind === 'platform') {
       return a.nodeKind === 'platform' && b.nodeKind === 'platform';
     }
+    if (a.compatibleTags && (!b.compatibilityTag || !a.compatibleTags.includes(b.compatibilityTag))) return false;
+    if (b.compatibleTags && (!a.compatibilityTag || !b.compatibleTags.includes(a.compatibilityTag))) return false;
     return true;
   }
 
@@ -519,6 +532,22 @@ export default function Page() {
     const selected = new Set(selectedUids);
     recordHistory();
     setItems(prev => prev.map(i => selected.has(i.uid) && !isItemLocked(i) ? gridOrEndpointSnap({ ...i, rotation: norm(i.rotation + delta) }, prev) : i));
+  }
+
+  function flipSelected() {
+    if (selectedUids.length === 0) {
+      setMessage('Select a part before flipping.');
+      return;
+    }
+    const selected = new Set(selectedUids);
+    const editableCount = items.filter(item => selected.has(item.uid) && !isItemLocked(item)).length;
+    if (editableCount === 0) {
+      setMessage('Selected pieces are locked and were not flipped.');
+      return;
+    }
+    recordHistory();
+    setItems(prev => prev.map(i => selected.has(i.uid) && !isItemLocked(i) ? gridOrEndpointSnap({ ...i, flip: !i.flip }, prev) : i));
+    setMessage(`Flipped ${editableCount} selected piece${editableCount === 1 ? '' : 's'}.`);
   }
 
   function performDeleteSelected() {
@@ -1114,7 +1143,7 @@ export default function Page() {
     for (const item of visibleItems) graph.set(item.uid, new Set());
     const ports = visibleItems.flatMap(item => {
       const part = partMap.get(item.partId)!;
-      return connectors(part, item).map(c => ({ uid: item.uid, x: c.x, y: c.y, heading: c.heading, nodeKind: c.nodeKind }));
+      return connectors(part, item).map(c => ({ uid: item.uid, x: c.x, y: c.y, heading: c.heading, nodeKind: c.nodeKind, partSku: c.partSku, compatibilityTag: c.compatibilityTag, compatibleTags: c.compatibleTags }));
     });
     for (let a = 0; a < ports.length; a++) {
       for (let b = a + 1; b < ports.length; b++) {
@@ -1308,12 +1337,11 @@ export default function Page() {
     return <main className="app-shell theme-light h-screen overflow-hidden" />;
   }
 
-  return <main className={`app-shell theme-${theme} h-screen overflow-hidden`}>
-    <header className="app-header h-[82px] border-b px-4 py-3">
-      <div className="flex h-full min-w-0 items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="truncate text-xl font-semibold">KATO Unitrack N Scale Planner</h1>
-          <p className="muted truncate text-sm">Click Place then click the grid, or drag parts from the palette. Snap multi-port endpoints and export your plan.</p>
+  return <main className={`app-shell theme-${theme} flex h-screen flex-col overflow-hidden`}>
+    <header className="app-header relative shrink-0 overflow-hidden border-b px-4 py-3">
+      <div className="mb-2 flex min-w-0 items-center justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate text-3xl font-bold tracking-normal">KATO N-Scale Unitrack Planner</h1>
         </div>
         <div className="flex shrink-0 gap-2">
           <button
@@ -1331,9 +1359,37 @@ export default function Page() {
           <label className="ui-button ui-button-md rounded-xl btn px-3 py-2 text-sm font-medium"><FolderOpen className="h-4 w-4"/>Load<input type="file" accept="application/json" className="hidden" onChange={e => e.target.files?.[0] && importJson(e.target.files[0])}/></label>
         </div>
       </div>
+      <div className="flex min-w-0 flex-wrap items-center gap-2">
+        <button onClick={() => setShowGrid(!showGrid)} className="ui-button ui-button-md btn rounded-xl px-3 py-2 text-sm"><Grid3X3 className="h-4 w-4"/>Grid {showGrid ? 'on' : 'off'}</button>
+        <button onClick={() => setShowHeightProfile(v => !v)} className="ui-button ui-button-md btn rounded-xl px-3 py-2 text-sm">Side View {showHeightProfile ? 'on' : 'off'}</button>
+        <button
+          onClick={() => setRenderDetail(detail => detail === 'high' ? 'low' : 'high')}
+          className="ui-button ui-button-md btn rounded-xl px-3 py-2 text-sm"
+          aria-pressed={renderDetail === 'high'}
+          title={renderDetail === 'high' ? 'Switch to low detail rendering' : 'Switch to high detail rendering'}
+        >
+          {renderDetail === 'high' ? <Eye className="h-4 w-4"/> : <EyeOff className="h-4 w-4"/>}
+          Detail {renderDetail === 'high' ? 'high' : 'low'}
+        </button>
+        <button onClick={() => setZoom(z => Math.max(0.35, Number((z - 0.1).toFixed(2))))} className="ui-button ui-button-md btn rounded-xl px-3 py-2 text-sm"><ZoomOut className="h-4 w-4"/></button>
+        <span className="subpanel rounded-xl px-3 py-2 text-sm muted">{Math.round(zoom * 100)}%</span>
+        <button onClick={() => setZoom(z => Math.min(5, Number((z + 0.1).toFixed(2))))} className="ui-button ui-button-md btn rounded-xl px-3 py-2 text-sm"><ZoomIn className="h-4 w-4"/></button>
+        <button onClick={zoomToFitLayout} className="ui-button ui-button-md btn rounded-xl px-3 py-2 text-sm"><Maximize2 className="h-4 w-4"/>Fit</button>
+        <button onClick={undoChange} disabled={!canUndo} className="ui-button ui-button-md btn rounded-xl px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"><RotateCcw className="h-4 w-4"/>Undo</button>
+        <button onClick={redoChange} disabled={!canRedo} className="ui-button ui-button-md btn rounded-xl px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"><RotateCw className="h-4 w-4"/>Redo</button>
+        <button onClick={() => rotateSelected(15)} className="ui-button ui-button-md btn rounded-xl px-3 py-2 text-sm"><RotateCcw className="h-4 w-4"/>15°</button>
+        <button onClick={() => rotateSelected(90)} className="ui-button ui-button-md btn rounded-xl px-3 py-2 text-sm"><RotateCcw className="h-4 w-4"/>90°</button>
+        <button onClick={flipSelected} disabled={selectedUids.length === 0} className="ui-button ui-button-md btn rounded-xl px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"><FlipHorizontal2 className="h-4 w-4"/>Flip</button>
+        <button onClick={selectAllPlaced} disabled={items.length === 0} className="ui-button ui-button-md btn rounded-xl px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50">Select All</button>
+        <button onClick={controlCopy} disabled={selectedUids.length === 0} className="ui-button ui-button-md btn rounded-xl px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"><Clipboard className="h-4 w-4"/>Copy</button>
+        <button onClick={controlPaste} className="ui-button ui-button-md btn rounded-xl px-3 py-2 text-sm"><ClipboardPaste className="h-4 w-4"/>Paste</button>
+        <button onClick={suggestGapFill} disabled={selectedUids.length < 2} className="ui-button ui-button-md btn rounded-xl px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50">Suggest Gap Fill</button>
+        <button onClick={deleteSelected} className="ui-button ui-button-md btn-danger rounded-xl px-3 py-2 text-sm"><Trash2 className="h-4 w-4"/>Delete</button>
+        <span className="min-w-[180px] flex-1 truncate text-sm muted">{message}</span>
+      </div>
     </header>
 
-    <div className="grid h-[calc(100vh-82px)] min-w-0 grid-cols-[270px_minmax(0,1fr)_280px] gap-3 overflow-hidden p-3">
+    <div className="grid min-h-0 min-w-0 flex-1 grid-cols-[270px_minmax(0,1fr)_280px] gap-3 overflow-hidden p-3">
       <aside className="panel flex min-h-0 flex-col rounded-2xl border p-3">
         <h2 className="mb-2 shrink-0 text-base font-semibold">Parts Palette</h2>
         <div className="mb-2 grid shrink-0 grid-cols-3 gap-1">
@@ -1346,7 +1402,23 @@ export default function Page() {
           <button onClick={() => setTool('place')} className={`ui-button ui-button-md rounded-xl px-3 py-2 text-sm ${tool === 'place' ? 'btn-success' : 'btn'}`}>Place</button>
           <button onClick={() => setTool('select')} className={`ui-button ui-button-md rounded-xl px-3 py-2 text-sm ${tool === 'select' ? 'btn-success' : 'btn'}`}><MousePointer2 className="h-4 w-4"/>Select</button>
         </div>
-        <h3 className="mb-2 shrink-0 text-sm font-semibold">Filter Parts</h3>
+        <div className="mb-2 flex shrink-0 items-center justify-between gap-2">
+          <h3 className="text-sm font-semibold">Filter Parts</h3>
+          <div className="subpanel flex rounded-xl p-1 text-[11px]" role="group" aria-label="Part filter matching mode">
+            <button
+              type="button"
+              onClick={() => setPartFilterMode('and')}
+              className={`rounded-lg px-2 py-1 font-semibold ${partFilterMode === 'and' ? 'btn-primary' : 'muted'}`}
+              title="Show only parts that match every selected filter"
+            >AND</button>
+            <button
+              type="button"
+              onClick={() => setPartFilterMode('or')}
+              className={`rounded-lg px-2 py-1 font-semibold ${partFilterMode === 'or' ? 'btn-primary' : 'muted'}`}
+              title="Show parts that match any selected filter"
+            >OR</button>
+          </div>
+        </div>
         <div className="mb-2 grid shrink-0 grid-cols-2 gap-2">
           {(['all', ...PRIMARY_TRACK_KINDS, ...SECONDARY_TRACK_KINDS] as PartFilter[]).map(filter => {
             const active = filter === 'all' ? partFilters.length === 0 || partFilters.includes('all') : partFilters.includes(filter);
@@ -1384,24 +1456,6 @@ export default function Page() {
       </aside>
 
       <section className="panel flex min-h-0 min-w-0 flex-col rounded-2xl border p-3">
-        <div className="mb-2 flex shrink-0 flex-wrap items-center gap-2">
-          <button onClick={() => setShowGrid(!showGrid)} className="ui-button ui-button-md btn rounded-xl px-3 py-2 text-sm"><Grid3X3 className="h-4 w-4"/>Grid {showGrid ? 'on' : 'off'}</button>
-          <button onClick={() => setShowHeightProfile(v => !v)} className="ui-button ui-button-md btn rounded-xl px-3 py-2 text-sm">Side View {showHeightProfile ? 'on' : 'off'}</button>
-          <button onClick={() => setZoom(z => Math.max(0.35, Number((z - 0.1).toFixed(2))))} className="ui-button ui-button-md btn rounded-xl px-3 py-2 text-sm"><ZoomOut className="h-4 w-4"/></button>
-          <span className="subpanel rounded-xl px-3 py-2 text-sm muted">{Math.round(zoom * 100)}%</span>
-          <button onClick={() => setZoom(z => Math.min(5, Number((z + 0.1).toFixed(2))))} className="ui-button ui-button-md btn rounded-xl px-3 py-2 text-sm"><ZoomIn className="h-4 w-4"/></button>
-          <button onClick={zoomToFitLayout} className="ui-button ui-button-md btn rounded-xl px-3 py-2 text-sm"><Maximize2 className="h-4 w-4"/>Fit</button>
-          <button onClick={undoChange} disabled={!canUndo} className="ui-button ui-button-md btn rounded-xl px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"><RotateCcw className="h-4 w-4"/>Undo</button>
-          <button onClick={redoChange} disabled={!canRedo} className="ui-button ui-button-md btn rounded-xl px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"><RotateCw className="h-4 w-4"/>Redo</button>
-          <button onClick={() => rotateSelected(15)} className="ui-button ui-button-md btn rounded-xl px-3 py-2 text-sm"><RotateCcw className="h-4 w-4"/>15°</button>
-          <button onClick={() => rotateSelected(90)} className="ui-button ui-button-md btn rounded-xl px-3 py-2 text-sm"><RotateCcw className="h-4 w-4"/>90°</button>
-          <button onClick={selectAllPlaced} disabled={items.length === 0} className="ui-button ui-button-md btn rounded-xl px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50">Select All</button>
-          <button onClick={controlCopy} disabled={selectedUids.length === 0} className="ui-button ui-button-md btn rounded-xl px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"><Clipboard className="h-4 w-4"/>Copy</button>
-          <button onClick={controlPaste} className="ui-button ui-button-md btn rounded-xl px-3 py-2 text-sm"><ClipboardPaste className="h-4 w-4"/>Paste</button>
-          <button onClick={suggestGapFill} disabled={selectedUids.length < 2} className="ui-button ui-button-md btn rounded-xl px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50">Suggest Gap Fill</button>
-          <button onClick={deleteSelected} className="ui-button ui-button-md btn-danger rounded-xl px-3 py-2 text-sm"><Trash2 className="h-4 w-4"/>Delete</button>
-          <span className="min-w-[180px] flex-1 truncate text-sm muted">{message}</span>
-        </div>
         {runSuggestions.length > 0 && <div className="subpanel mb-2 rounded-xl p-2 text-xs">
           <div className="mb-1 flex items-center justify-between gap-2">
             <b>Auto-complete track run suggestions</b>
@@ -1525,9 +1579,9 @@ export default function Page() {
             />}
             {layers.flatMap(layer => items.filter(item => (item.layerId ?? BASE_LAYER_ID) === layer.id && layer.visible).map(item => {
               const p = partMap.get(item.partId)!;
-              return <TrackShape key={`${item.uid}-body`} part={p} item={item} selected={selectedUids.includes(item.uid)} layer="both" onPointerDown={e => beginItemDrag(e, item)} />;
+              return <TrackShape key={`${item.uid}-body`} part={p} item={item} selected={selectedUids.includes(item.uid)} layer="both" renderDetail={renderDetail} onPointerDown={e => beginItemDrag(e, item)} />;
             }))}
-            {ghost && partMap.has(ghost.partId) && layerMap.get(ghost.layerId ?? activeLayerId)?.visible !== false && <TrackShape part={partMap.get(ghost.partId)!} item={ghost} ghost layer="both" />}
+            {ghost && partMap.has(ghost.partId) && layerMap.get(ghost.layerId ?? activeLayerId)?.visible !== false && <TrackShape part={partMap.get(ghost.partId)!} item={ghost} ghost layer="both" renderDetail={renderDetail} />}
             {layers.flatMap(layer => items.filter(item => (item.layerId ?? BASE_LAYER_ID) === layer.id && layer.visible).map(item => {
               const p = partMap.get(item.partId)!;
               const isSelected = selectedUids.includes(item.uid);
@@ -1630,6 +1684,7 @@ export default function Page() {
               <div className="strong font-semibold">{partMap.get(selectedItem.partId)?.sku} {partMap.get(selectedItem.partId)?.name}</div>
               <div>x {selectedItem.x.toFixed(1)} mm · y {selectedItem.y.toFixed(1)} mm</div>
               <div>rotation {selectedItem.rotation}°</div>
+              <div>flipped {selectedItem.flip ? 'yes' : 'no'}</div>
               {isExpansionTrack(partMap.get(selectedItem.partId)!) && <div>adjusted length {partLength(partMap.get(selectedItem.partId)!, selectedItem).toFixed(1)} mm</div>}
               {partMap.get(selectedItem.partId)?.kind === 'building' && (() => {
                 const disabled = isItemLocked(selectedItem);
@@ -1717,17 +1772,31 @@ export default function Page() {
           </div>
         </div>
 
-        <div className="mb-2 mt-4 flex shrink-0 items-center justify-between gap-2">
+        <div className="mb-2 mt-4 flex shrink-0 flex-col items-start gap-2">
           <h2 className="text-base font-semibold">Bill of Materials</h2>
-          <div className="flex shrink-0 flex-wrap justify-end gap-1">
-            <button onClick={exportBomCsv} disabled={stockComparisonRows.length === 0} className="ui-button ui-button-sm btn rounded-lg px-2 py-1 text-xs disabled:cursor-not-allowed disabled:opacity-50"><FileSpreadsheet className="h-4 w-4"/>BOM CSV</button>
-            <button onClick={exportPurchaseCsv} disabled={purchaseRows.length === 0} className="ui-button ui-button-sm btn rounded-lg px-2 py-1 text-xs disabled:cursor-not-allowed disabled:opacity-50"><Download className="h-4 w-4"/>Buy CSV</button>
+          <div className="flex shrink-0 flex-wrap gap-1">
+            <details className="relative">
+              <summary className="ui-button ui-button-sm btn cursor-pointer list-none rounded-lg px-2 py-1 text-xs [&::-webkit-details-marker]:hidden">
+                <Download className="h-4 w-4"/>Export<ChevronDown className="h-3.5 w-3.5"/>
+              </summary>
+              <div className="panel absolute right-0 z-20 mt-1 w-44 rounded-xl border p-1 shadow-xl">
+                <button onClick={exportBomCsv} disabled={stockComparisonRows.length === 0} className="ui-button ui-button-sm btn w-full justify-start rounded-lg px-2 py-1 text-xs disabled:cursor-not-allowed disabled:opacity-50"><FileSpreadsheet className="h-4 w-4"/>BOM CSV</button>
+                <button onClick={exportPurchaseCsv} disabled={purchaseRows.length === 0} className="ui-button ui-button-sm btn mt-1 w-full justify-start rounded-lg px-2 py-1 text-xs disabled:cursor-not-allowed disabled:opacity-50"><Download className="h-4 w-4"/>Buy CSV</button>
+              </div>
+            </details>
+            <details className="relative">
+              <summary className="ui-button ui-button-sm btn cursor-pointer list-none rounded-lg px-2 py-1 text-xs [&::-webkit-details-marker]:hidden">
+                <Upload className="h-4 w-4"/>Stock<ChevronDown className="h-3.5 w-3.5"/>
+              </summary>
+              <div className="panel absolute right-0 z-20 mt-1 w-44 rounded-xl border p-1 shadow-xl">
+                <button onClick={() => stockFileRef.current?.click()} className="ui-button ui-button-sm btn w-full justify-start rounded-lg px-2 py-1 text-xs"><Upload className="h-4 w-4"/>Import Stock</button>
+                <button onClick={() => { setOwnedStock({}); setMessage('Cleared imported stock quantities.'); }} disabled={Object.keys(ownedStock).length === 0} className="ui-button ui-button-sm btn mt-1 w-full justify-start rounded-lg px-2 py-1 text-xs disabled:opacity-50"><Trash2 className="h-4 w-4"/>Clear Stock</button>
+              </div>
+            </details>
           </div>
         </div>
-        <div className="mb-2 grid shrink-0 grid-cols-3 gap-1">
-          <button onClick={() => stockFileRef.current?.click()} className="ui-button ui-button-sm btn rounded-lg px-2 py-1 text-xs"><Upload className="h-4 w-4"/>Import Stock</button>
-          <button onClick={() => { setOwnedStock({}); setMessage('Cleared imported stock quantities.'); }} disabled={Object.keys(ownedStock).length === 0} className="ui-button ui-button-sm btn rounded-lg px-2 py-1 text-xs disabled:opacity-50">Clear Stock</button>
-          <div className="muted flex items-center justify-end text-[11px]">{Object.keys(ownedStock).length} SKU owned</div>
+        <div className="muted mb-2 flex shrink-0 items-center justify-end text-[11px]">
+          {Object.keys(ownedStock).length} SKU owned
           <input ref={stockFileRef} type="file" accept=".csv,text/csv" className="hidden" onChange={e => { const file = e.currentTarget.files?.[0]; if (file) importStockCsv(file); e.currentTarget.value = ''; }} />
         </div>
         <div className="subpanel min-h-0 flex-1 overflow-auto rounded-xl p-3 text-sm">

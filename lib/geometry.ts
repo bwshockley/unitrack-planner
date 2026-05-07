@@ -1,6 +1,6 @@
 import { TrackPart } from './unitrack';
 
-export type Pose = { x: number; y: number; heading: number; key?: string; label?: string; nodeKind?: 'track' | 'platform' };
+export type Pose = { x: number; y: number; heading: number; key?: string; label?: string; nodeKind?: 'track' | 'platform'; partSku?: string; compatibilityTag?: string; compatibleTags?: string[] };
 export type NodeHeights = Record<string, number>;
 export type PlacedTrack = { uid: string; partId: string; x: number; y: number; rotation: number; flip?: boolean; layerId?: string; customLength?: number; nodeHeights?: NodeHeights; shapeWidth?: number; shapeHeight?: number; shapeSide?: number; shapeDiameter?: number; shapeColor?: string; buildingSvg?: string };
 export function nodeHeight(item: Pick<PlacedTrack, 'nodeHeights'>, key?: string) { return item.nodeHeights?.[key ?? ''] ?? 0; }
@@ -36,6 +36,10 @@ export function isDoubleTrack(part: TrackPart) {
 }
 
 export function localConnectors(part: TrackPart, flip = false, placed?: Pick<PlacedTrack, 'customLength'>): Pose[] {
+  if (part.connectionNodes) {
+    return part.connectionNodes;
+  }
+
   if (part.kind === 'building') {
     return part.connectionNodes ?? [];
   }
@@ -70,14 +74,27 @@ export function localConnectors(part: TrackPart, flip = false, placed?: Pick<Pla
     const signedAngle = (part.angle ?? 0) * (flip ? -1 : 1);
 
     if (isDoubleTrack(part) && r2) {
+      const concreteDoubleCurveSkus = ['20-181', '20-183', '20-185', '20-187', '20-544'];
+      const concreteDoubleTransitionSkus = ['20-182', '20-184', '20-186', '20-188', '20-545'];
+      const coreTag = 'concrete-double-curve-core';
+      const transitionTag = 'concrete-double-curve-transition';
+      const compatibilityForPort = (key: string): Pick<Pose, 'compatibilityTag' | 'compatibleTags'> => {
+        if (concreteDoubleCurveSkus.includes(part.sku)) return { compatibilityTag: coreTag, compatibleTags: [coreTag, transitionTag] };
+        const transitionBaseSku = part.sku.slice(0, -1);
+        if (concreteDoubleTransitionSkus.includes(transitionBaseSku) && part.sku.endsWith('L') && key.endsWith('-b')) return { compatibilityTag: transitionTag, compatibleTags: [coreTag] };
+        if (concreteDoubleTransitionSkus.includes(transitionBaseSku) && part.sku.endsWith('R') && key.endsWith('-a')) return { compatibilityTag: transitionTag, compatibleTags: [coreTag] };
+        return {};
+      };
       const centerRadius = (r1 + r2) / 2;
       const portsForRadius = (radius: number, prefix: string): Pose[] => {
         const startY = centerRadius - radius;
         const ex = radius * Math.sin(degToRad(signedAngle));
         const ey = centerRadius - radius * Math.cos(degToRad(signedAngle));
+        const startKey = `${prefix}-a`;
+        const endKey = `${prefix}-b`;
         return [
-          { key: `${prefix}-a`, label: `${prefix} A`, x: 0, y: startY, heading: 0 },
-          { key: `${prefix}-b`, label: `${prefix} B`, x: ex, y: ey, heading: norm(180 + signedAngle) },
+          { key: startKey, label: `${prefix} A`, x: 0, y: startY, heading: 0, ...compatibilityForPort(startKey) },
+          { key: endKey, label: `${prefix} B`, x: ex, y: ey, heading: norm(180 + signedAngle), ...compatibilityForPort(endKey) },
         ];
       };
       return [...portsForRadius(r1, 'track-1'), ...portsForRadius(r2, 'track-2')];
@@ -147,5 +164,5 @@ export function localConnectors(part: TrackPart, flip = false, placed?: Pick<Pla
 
 export function connectors(part: TrackPart, placed: PlacedTrack): Pose[] {
   const local = localConnectors(part, false, placed);
-  return local.map(p => transformLocalPose(p, placed));
+  return local.map(p => transformLocalPose({ ...p, partSku: part.sku }, placed));
 }

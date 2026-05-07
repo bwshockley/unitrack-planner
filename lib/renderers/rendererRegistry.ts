@@ -28,7 +28,10 @@ export function getRendererFamily(part: TrackPart): RendererFamily {
     if (part.bridgeStyle === 'plate-girder') return 'plate-girder-bridge';
     return 'deck-girder-bridge';
   }
-  if (part.secondaryKinds?.includes('Viaduct')) return isDoubleTrack(part) ? 'double-viaduct' : 'single-viaduct';
-  if (isDoubleTrack(part)) return part.notes?.toLowerCase().includes('slab') ? 'double-slab-track' : 'double-track';
+  if (part.secondaryKinds?.includes('Viaduct')) {
+    if (isDoubleTrack(part) && (part.secondaryKinds?.includes('Concrete Slab') || part.notes?.toLowerCase().includes('slab'))) return 'double-slab-track';
+    return isDoubleTrack(part) ? 'double-viaduct' : 'single-viaduct';
+  }
+  if (isDoubleTrack(part)) return part.secondaryKinds?.includes('Concrete Slab') || part.notes?.toLowerCase().includes('slab') ? 'double-slab-track' : 'double-track';
   return 'standard-track';
 }

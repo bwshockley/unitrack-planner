@@ -73,11 +73,14 @@ sourcePage,symbol,sku,englishName,category,appKind,secondaryKinds,lengthMm,radiu
 1-6,20-301,20-301,15° Crossing Right,crossing,crossing,,186,,,15,,,,,,"Single-track 15° right crossing, 186mm",included_in_app_native_csv
 1-6,20-320,20-320,90° Crossing,crossing,crossing,,124,,,90,,,,,,"Single-track 90° crossing, 124mm",included_in_app_native_csv
 1-6,20-400,20-400,S248 Single Track Viaduct,viaduct,straight,Viaduct,248,,,,#8f9499,,,,,"Single-track straight viaduct, 248mm",included_in_app_native_csv
-1-6,20-401,20-401,Double Straight Viaduct 248mm,viaduct,straight,Double|Viaduct,248,,,,#8f9499,,,,,Double-track elevated viaduct straight section on 33mm centers with roadbeds plus filled center deck,included_in_app_native_csv
+1-6,20-401,20-401,Concrete Slab Double Track Straight Viaduct 248mm,viaduct,straight,Double|Viaduct|Concrete Slab,248,,,,#8f9499,,,,,Concrete slab double-track straight viaduct section on 33mm centers with edge walls,included_in_app_native_csv
 1-6,20-410,20-410,S186 Single Track Viaduct,viaduct,straight,Viaduct,186,,,,#8f9499,,,,,"Single-track straight viaduct, 186mm",included_in_app_native_csv
-1-6,20-411,20-411,Double Straight Viaduct 186mm,viaduct,straight,Double|Viaduct,186,,,,#8f9499,,,,,"Double-track concrete slab viaduct, 186mm",included_in_app_native_csv
+1-6,20-411,20-411,Concrete Slab Double Track Straight Viaduct 186mm,viaduct,straight,Double|Viaduct|Concrete Slab,186,,,,#8f9499,,,,,Concrete slab double-track straight viaduct section on 33mm centers with edge walls,included_in_app_native_csv
 1-6,20-420,20-420,S124 Single Track Viaduct,viaduct,straight,Viaduct,124,,,,#8f9499,,,,,"Single-track straight viaduct, 124mm",included_in_app_native_csv
-1-6,20-422,20-422,Double Straight Viaduct 124mm,viaduct,straight,Double|Viaduct,124,,,,#8f9499,,,,,"Double-track concrete slab viaduct, 124mm",included_in_app_native_csv
+1-6,20-422,20-422,Concrete Slab Double Track Straight Viaduct 124mm,viaduct,straight,Double|Viaduct|Concrete Slab,124,,,,#8f9499,,,,,Concrete slab double-track straight viaduct section on 33mm centers with edge walls,included_in_app_native_csv
+1-6,20-544,20-544,Concrete Slab Double Track Viaduct Curve R414/381-45,viaduct,curve,Double|Viaduct|Concrete Slab,,414,381,45,#8f9499,,,,,Concrete slab double-track viaduct 45° curve with 414mm/381mm radii; special nodes compatible with the concrete double-curve family,included_in_app_native_csv
+1-6,20-545L,20-545L,Concrete Slab Double Track Viaduct Curve R414/381-22.5 Left,viaduct,curve,Double|Viaduct|Concrete Slab,,414,381,22.5,#8f9499,,,,,Right-side nodes only connect with the concrete double-curve family,included_in_app_native_csv
+1-6,20-545R,20-545R,Concrete Slab Double Track Viaduct Curve R414/381-22.5 Right,viaduct,curve,Double|Viaduct|Concrete Slab,,414,381,22.5,#8f9499,,,,,Left-side nodes only connect with the concrete double-curve family,included_in_app_native_csv
 1-6,20-429,20-429,S248 Single Track Truss Bridge Red Brown,bridge,straight,Bridge,248,,,,#7a3f2a,truss,,,,"Single-track truss bridge, reddish brown, 248mm",included_in_app_native_csv
 1-6,20-430,20-430,S248 Single Track Truss Bridge Red,bridge,straight,Bridge,248,,,,#a53b32,truss,,,,"Single-track truss bridge, red, 248mm",included_in_app_native_csv
 1-6,20-431,20-431,S248 Single Track Truss Bridge Green,bridge,straight,Bridge,248,,,,#4f7f4f,truss,,,,"Single-track truss bridge, green, 248mm",included_in_app_native_csv
@@ -85,7 +88,15 @@ sourcePage,symbol,sku,englishName,category,appKind,secondaryKinds,lengthMm,radiu
 1-6,20-433,20-433,S248 Single Track Truss Bridge Silver,bridge,straight,Bridge,248,,,,#9ca3af,truss,,,,"Single-track truss bridge, silver, 248mm",included_in_app_native_csv
 1-6,20-434,20-434,S248 Single Track Truss Bridge Black,bridge,straight,Bridge,248,,,,#333333,truss,,,,"Single-track truss bridge, black, 248mm",included_in_app_native_csv
 1-6,20-435,20-435,S248 Truss Bridge,bridge,straight,Bridge,248,,,,#777777,truss,,,,Bridge section with straight truss connection geometry,included_in_app_native_csv
+1-6,20-436,20-436,Double Track Truss Bridge Light Blue 248mm,bridge,straight,Double|Bridge,248,,,,#9bdcf4,truss,,,,Double-track light blue truss bridge 248mm,included_in_app_native_csv
+1-6,20-437,20-437,Double Track Truss Bridge Gray 248mm,bridge,straight,Double|Bridge,248,,,,#9ca3af,truss,,,,Double-track gray truss bridge 248mm,included_in_app_native_csv
+1-6,20-438,20-438,Double Track Truss Bridge Black 248mm,bridge,straight,Double|Bridge,248,,,,#262b2f,truss,,,,Double-track dark gray black truss bridge 248mm,included_in_app_native_csv
+1-6,20-439,20-439,Double Track Truss Bridge Light Green 248mm,bridge,straight,Double|Bridge,248,,,,#a8d8b4,truss,,,,Double-track light green truss bridge 248mm,included_in_app_native_csv
 1-6,20-440,20-440,S62 Single Track Viaduct,viaduct,straight,Viaduct,62,,,,#8f9499,,,,,"Single-track straight viaduct, 62mm",included_in_app_native_csv
+1-6,20-455,20-455,Double Track Plate Girder Bridge Light Blue 186mm,bridge,straight,Double|Bridge,186,,,,#9bdcf4,plate-girder,,,,Double-track light blue plate girder bridge 186mm,included_in_app_native_csv
+1-6,20-456,20-456,Double Track Plate Girder Bridge Light Green 186mm,bridge,straight,Double|Bridge,186,,,,#a8d8b4,plate-girder,,,,Double-track light green plate girder bridge 186mm,included_in_app_native_csv
+1-6,20-457,20-457,Double Track Plate Girder Bridge Gray 186mm,bridge,straight,Double|Bridge,186,,,,#9ca3af,plate-girder,,,,Double-track gray plate girder bridge 186mm,included_in_app_native_csv
+1-6,20-458,20-458,Double Track Plate Girder Bridge Black 186mm,bridge,straight,Double|Bridge,186,,,,#262b2f,plate-girder,,,,Double-track dark gray black plate girder bridge 186mm,included_in_app_native_csv
 1-6,20-450,20-450,S186 Single Track Plate Girder Bridge Red,bridge,straight,Bridge,186,,,,#a53b32,plate-girder,,,,"Single-track plate girder bridge, red, 186mm",included_in_app_native_csv
 1-6,20-451,20-451,S186 Single Track Plate Girder Bridge Green,bridge,straight,Bridge,186,,,,#4f7f4f,plate-girder,,,,"Single-track plate girder bridge, green, 186mm",included_in_app_native_csv
 1-6,20-452,20-452,S186 Single Track Plate Girder Bridge Gray,bridge,straight,Bridge,186,,,,#777777,plate-girder,,,,"Single-track plate girder bridge, gray, 186mm",included_in_app_native_csv

@@ -8,12 +8,25 @@ platform-23-170-center-a,23-170B,Island Platform 23-170 Center A,building,,,,,,,
 platform-23-170-center-b,23-170C,Island Platform 23-170 Center B,building,,,,,,,,,,#cbd5e1,,,248,42,platform,,,,,,KATO 23-170 modular island platform center section; platform nodes connect only to other platform nodes
 platform-23-170-end-right,23-170D,Island Platform 23-170 Right Curved End,building,,,,,,,,,,#cbd5e1,,,200,42,platform,,,,,,KATO 23-170 modular island platform curved end; platform nodes connect only to other platform nodes
 s248,20-000,S248 Straight,straight,,248,,,,,,,,,,,,,,,,,,,
+concrete-s248,20-875,Concrete Tie S248 Straight,straight,,248,,,,,,,,,,,,,,,,,,,Concrete-tie straight track 248mm
+double-concrete-s248,20-004,Concrete Tie Double Track 248mm,straight,Double,248,,,,,,,33,,,,,,,,,,,,Concrete-tie double-track straight section on 33mm centers
+double-concrete-slab-s248,20-006,Concrete Slab Double Track 248mm,straight,Double|Concrete Slab,248,,,,,,,33,,,,,,,,,,,,Concrete slab double-track straight section on 33mm centers
 s186,20-010,S186 Straight,straight,,186,,,,,,,,,,,,,,,,,,,
+double-concrete-s186,20-012,Concrete Tie Double Track 186mm,straight,Double,186,,,,,,,33,,,,,,,,,,,,Concrete-tie double-track straight section on 33mm centers
+double-concrete-slab-s186,20-014,Concrete Slab Double Track 186mm,straight,Double|Concrete Slab,186,,,,,,,33,,,,,,,,,,,,Concrete slab double-track straight section on 33mm centers
 s124,20-020,S124 Straight,straight,,124,,,,,,,,,,,,,,,,,,,
+double-concrete-s124,20-023,Concrete Tie Double Track 124mm,straight,Double,124,,,,,,,33,,,,,,,,,,,,Concrete-tie double-track straight section on 33mm centers
+double-concrete-slab-s124,20-025,Concrete Slab Double Track 124mm,straight,Double|Concrete Slab,124,,,,,,,33,,,,,,,,,,,,Concrete slab double-track straight section on 33mm centers
 s64,20-030,S64 Straight,straight,,64,,,,,,,,,,,,,,,,,,,
 s62,20-040,S62 Straight,straight,,62,,,,,,,,,,,,,,,,,,,
 s62f,20-041,S62 Feeder,straight,,62,,,,,,,,,,,,,,,,,,,
+double-concrete-s62,20-042,Concrete Tie Double Track 62mm,straight,Double,62,,,,,,,33,,,,,,,,,,,,Concrete-tie double-track straight section on 33mm centers
+double-concrete-s62f,20-043,Concrete Tie Double Track Feeder 62mm,straight,Double,62,,,,,,,33,,,,,,,,,,,,Concrete-tie double-track feeder straight section on 33mm centers
+double-concrete-slab-s62,20-044,Concrete Slab Double Track 62mm,straight,Double|Concrete Slab,62,,,,,,,33,,,,,,,,,,,,Concrete slab double-track straight section on 33mm centers
+double-concrete-slab-s62f,20-049,Concrete Slab Double Track Feeder 62mm,straight,Double|Concrete Slab,62,,,,,,,33,,,,,,,,,,,,Concrete slab double-track feeder straight section on 33mm centers
 expansion-78-108,20-050,Expansion Track 78–108mm,straight,,108,78,108,,,,,,,,,,,,,,,,,Adjustable straight expansion track; drag end handle to resize between 78mm and 108mm
+double-widening-left-310,20-051,Concrete Tie Double Track Widening Left 310mm,straight,Double,310,,,,,,left,33,,,,,,,,,,,,Concrete-tie double-track left-hand widening section 310mm
+double-widening-right-310,20-052,Concrete Tie Double Track Widening Right 310mm,straight,Double,310,,,,,,right,33,,,,,,,,,,,,Concrete-tie double-track right-hand widening section 310mm
 bumper-20-046,20-046,Bumper Type A,straight,,95,,,,,,,,,,true,,,,,,,,,Long bumper with concrete stop.
 bumper-20-047,20-047,Bumper Type B,straight,,95,,,,,,,,,,true,,,,,,,,,Long bumper with rock filled wood stop.
 bumper-20-048,20-048,Bumper Type C,straight,,50,,,,,,,,,,true,,,,,,,,,Short bumper with posts stop.
@@ -36,6 +49,21 @@ r381-30,20-140,R381-30 Curve,curve,,,,,381,,30,,,,,,,,,,,,,,
 r381-10,20-141,R381-10 Curve,curve,,,,,381,,10,,,,,,,,,,,,,,
 r718-15,20-150,R718-15 Curve,curve,,,,,718,,15,,,,,,,,,,,,,,
 r481-15,20-160,R481-15 Curve,curve,,,,,481,,15,,,,,,,,,,,,,,
+double-concrete-r414-381-45,20-181,Concrete Tie Double Track Curve R414/381-45,curve,Double,,,,414,381,45,,,,,,,,,,,,,,Concrete-tie double-track 45° curve with 414mm/381mm radii
+double-concrete-r414-381-22.5-left,20-182L,Concrete Tie Double Track Curve R414/381-22.5 Left,curve,Double,,,,414,381,22.5,left,,,,,,,,,,,,,Right-side nodes only connect with 20-181 20-183 or 20-185
+double-concrete-r414-381-22.5-right,20-182R,Concrete Tie Double Track Curve R414/381-22.5 Right,curve,Double,,,,414,381,22.5,right,,,,,,,,,,,,,Left-side nodes only connect with 20-181 20-183 or 20-185
+double-concrete-r315-282-45,20-183,Concrete Tie Double Track Curve R315/282-45,curve,Double,,,,315,282,45,,,,,,,,,,,,,,Concrete-tie double-track 45° curve with 315mm/282mm radii
+double-concrete-r315-282-22.5-left,20-184L,Concrete Tie Double Track Curve R315/282-22.5 Left,curve,Double,,,,315,282,22.5,left,,,,,,,,,,,,,Right-side nodes only connect with 20-181 20-183 or 20-185
+double-concrete-r315-282-22.5-right,20-184R,Concrete Tie Double Track Curve R315/282-22.5 Right,curve,Double,,,,315,282,22.5,right,,,,,,,,,,,,,Left-side nodes only connect with 20-181 20-183 or 20-185
+double-concrete-r480-447-45,20-185,Concrete Tie Double Track Curve R480/447-45,curve,Double,,,,480,447,45,,,,,,,,,,,,,,Concrete-tie double-track 45° curve with 480mm/447mm radii
+double-concrete-r480-447-22.5-left,20-186L,Concrete Tie Double Track Curve R480/447-22.5 Left,curve,Double,,,,480,447,22.5,left,,,,,,,,,,,,,Right-side nodes only connect with 20-181 20-183 or 20-185
+double-concrete-r480-447-22.5-right,20-186R,Concrete Tie Double Track Curve R480/447-22.5 Right,curve,Double,,,,480,447,22.5,right,,,,,,,,,,,,,Left-side nodes only connect with 20-181 20-183 or 20-185
+double-concrete-slab-r414-381-45,20-187,Concrete Slab Double Track Curve R414/381-45,curve,Double|Concrete Slab,,,,414,381,45,,,,,,,,,,,,,,Concrete slab double-track 45° curve with 414mm/381mm radii; special nodes compatible with the concrete double-curve family
+double-concrete-slab-r414-381-22.5-left,20-188L,Concrete Slab Double Track Curve R414/381-22.5 Left,curve,Double|Concrete Slab,,,,414,381,22.5,left,,,,,,,,,,,,,Right-side nodes only connect with the concrete double-curve family
+double-concrete-slab-r414-381-22.5-right,20-188R,Concrete Slab Double Track Curve R414/381-22.5 Right,curve,Double|Concrete Slab,,,,414,381,22.5,right,,,,,,,,,,,,,Left-side nodes only connect with the concrete double-curve family
+double-concrete-slab-viaduct-r414-381-45,20-544,Concrete Slab Double Track Viaduct Curve R414/381-45,curve,Double|Viaduct|Concrete Slab,,,,414,381,45,,,#8f9499,,,,,,,,,,,Concrete slab double-track viaduct 45° curve with 414mm/381mm radii; special nodes compatible with the concrete double-curve family
+double-concrete-slab-viaduct-r414-381-22.5-left,20-545L,Concrete Slab Double Track Viaduct Curve R414/381-22.5 Left,curve,Double|Viaduct|Concrete Slab,,,,414,381,22.5,left,,#8f9499,,,,,,,,,,,Right-side nodes only connect with the concrete double-curve family
+double-concrete-slab-viaduct-r414-381-22.5-right,20-545R,Concrete Slab Double Track Viaduct Curve R414/381-22.5 Right,curve,Double|Viaduct|Concrete Slab,,,,414,381,22.5,right,,#8f9499,,,,,,,,,,,Left-side nodes only connect with the concrete double-curve family
 r216-45,20-170,R216-45 Curve,curve,,,,,216,,45,,,,,,,,,,,,,,
 r216-15,20-171,R216-15 Curve,curve,,,,,216,,15,,,,,,,,,,,,,,
 r183-45,20-172,R183-45 Compact Curve,curve,,,,,183,,45,,,,,,,,,,,,,,Compact 183mm radius curve
@@ -53,11 +81,11 @@ crossing-15-right,20-301,15° Crossing Right,crossing,,186,,,,,15,right,,,,,,,,,
 crossing-90,20-320,90° Crossing,crossing,,124,,,,,90,,,,,,,,,,,,,,"Single-track 90° crossing, 124mm"
 double-crossover,20-210,Double Crossover,crossing,Double,310,,,,,,,33,,,,,,,,,,,,Four main connection points on 33mm track centers
 viaduct-s248,20-400,S248 Single Track Viaduct,straight,Viaduct,248,,,,,,,,#8f9499,,,,,,,,,,,"Single-track straight viaduct, 248mm"
-double-viaduct-s248,20-401,Double Straight Viaduct 248mm,straight,Double|Viaduct,248,,,,,,,33,#8f9499,,,,,,,,,,,Double-track elevated viaduct straight section on 33mm centers with roadbeds plus filled center deck
+double-viaduct-s248,20-401,Concrete Slab Double Track Straight Viaduct 248mm,straight,Double|Viaduct|Concrete Slab,248,,,,,,,33,#8f9499,,,,,,,,,,,Concrete slab double-track straight viaduct section on 33mm centers with edge walls
 viaduct-s186,20-410,S186 Single Track Viaduct,straight,Viaduct,186,,,,,,,,#8f9499,,,,,,,,,,,"Single-track straight viaduct, 186mm"
-double-viaduct-s186,20-411,Double Straight Viaduct 186mm,straight,Double|Viaduct,186,,,,,,,33,#8f9499,,,,,,,,,,,"Double-track concrete slab viaduct, 186mm"
+double-viaduct-s186,20-411,Concrete Slab Double Track Straight Viaduct 186mm,straight,Double|Viaduct|Concrete Slab,186,,,,,,,33,#8f9499,,,,,,,,,,,Concrete slab double-track straight viaduct section on 33mm centers with edge walls
 viaduct-s124,20-420,S124 Single Track Viaduct,straight,Viaduct,124,,,,,,,,#8f9499,,,,,,,,,,,"Single-track straight viaduct, 124mm"
-double-viaduct-s124,20-422,Double Straight Viaduct 124mm,straight,Double|Viaduct,124,,,,,,,33,#8f9499,,,,,,,,,,,"Double-track concrete slab viaduct, 124mm"
+double-viaduct-s124,20-422,Concrete Slab Double Track Straight Viaduct 124mm,straight,Double|Viaduct|Concrete Slab,124,,,,,,,33,#8f9499,,,,,,,,,,,Concrete slab double-track straight viaduct section on 33mm centers with edge walls
 viaduct-s62,20-440,S62 Single Track Viaduct,straight,Viaduct,62,,,,,,,,#8f9499,,,,,,,,,,,"Single-track straight viaduct, 62mm"
 viaduct-r249-45,20-505,R249-45 Single Track Viaduct Curve,curve,Viaduct,,,,249,,45,,,#8f9499,,,,,,,,,,,"Single-track viaduct curve, R249 45°"
 viaduct-r282-45,20-510,R282-45 Single Track Viaduct Curve,curve,Viaduct,,,,282,,45,,,#8f9499,,,,,,,,,,,"Single-track viaduct curve, R282 45°"
@@ -71,6 +99,14 @@ truss-bridge-green-s248,20-431,S248 Single Track Truss Bridge Green,straight,Bri
 truss-bridge-gray-s248,20-432,S248 Single Track Truss Bridge Gray,straight,Bridge,248,,,,,,,,#777777,truss,,,,,,,,,,"Single-track truss bridge, gray, 248mm"
 truss-bridge-silver-s248,20-433,S248 Single Track Truss Bridge Silver,straight,Bridge,248,,,,,,,,#9ca3af,truss,,,,,,,,,,"Single-track truss bridge, silver, 248mm"
 truss-bridge-black-s248,20-434,S248 Single Track Truss Bridge Black,straight,Bridge,248,,,,,,,,#333333,truss,,,,,,,,,,"Single-track truss bridge, black, 248mm"
+double-truss-bridge-light-blue-s248,20-436,Double Track Truss Bridge Light Blue 248mm,straight,Double|Bridge,248,,,,,,,33,#9bdcf4,truss,,,,,,,,,,Double-track light blue truss bridge 248mm
+double-truss-bridge-gray-s248,20-437,Double Track Truss Bridge Gray 248mm,straight,Double|Bridge,248,,,,,,,33,#9ca3af,truss,,,,,,,,,,Double-track gray truss bridge 248mm
+double-truss-bridge-black-s248,20-438,Double Track Truss Bridge Black 248mm,straight,Double|Bridge,248,,,,,,,33,#262b2f,truss,,,,,,,,,,Double-track dark gray black truss bridge 248mm
+double-truss-bridge-light-green-s248,20-439,Double Track Truss Bridge Light Green 248mm,straight,Double|Bridge,248,,,,,,,33,#a8d8b4,truss,,,,,,,,,,Double-track light green truss bridge 248mm
+double-plate-girder-bridge-light-blue-s186,20-455,Double Track Plate Girder Bridge Light Blue 186mm,straight,Double|Bridge,186,,,,,,,33,#9bdcf4,plate-girder,,,,,,,,,,Double-track light blue plate girder bridge 186mm
+double-plate-girder-bridge-light-green-s186,20-456,Double Track Plate Girder Bridge Light Green 186mm,straight,Double|Bridge,186,,,,,,,33,#a8d8b4,plate-girder,,,,,,,,,,Double-track light green plate girder bridge 186mm
+double-plate-girder-bridge-gray-s186,20-457,Double Track Plate Girder Bridge Gray 186mm,straight,Double|Bridge,186,,,,,,,33,#9ca3af,plate-girder,,,,,,,,,,Double-track gray plate girder bridge 186mm
+double-plate-girder-bridge-black-s186,20-458,Double Track Plate Girder Bridge Black 186mm,straight,Double|Bridge,186,,,,,,,33,#262b2f,plate-girder,,,,,,,,,,Double-track dark gray black plate girder bridge 186mm
 plate-girder-bridge-red-s186,20-450,S186 Single Track Plate Girder Bridge Red,straight,Bridge,186,,,,,,,,#a53b32,plate-girder,,,,,,,,,,"Single-track plate girder bridge, red, 186mm"
 plate-girder-bridge-green-s186,20-451,S186 Single Track Plate Girder Bridge Green,straight,Bridge,186,,,,,,,,#4f7f4f,plate-girder,,,,,,,,,,"Single-track plate girder bridge, green, 186mm"
 plate-girder-bridge-gray-s186,20-452,S186 Single Track Plate Girder Bridge Gray,straight,Bridge,186,,,,,,,,#777777,plate-girder,,,,,,,,,,"Single-track plate girder bridge, gray, 186mm"

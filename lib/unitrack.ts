@@ -1,5 +1,5 @@
 export type TrackKind = 'straight' | 'curve' | 'turnout' | 'crossing' | 'building' | 'shape';
-export type SecondaryTrackKind = 'Viaduct' | 'Double' | 'Bridge';
+export type SecondaryTrackKind = 'Viaduct' | 'Double' | 'Bridge' | 'Concrete Slab';
 
 export type TrackPart = {
   id: string;
@@ -27,11 +27,11 @@ export type TrackPart = {
   shapeHeight?: number;
   shapeSide?: number;
   shapeDiameter?: number;
-  connectionNodes?: { key: string; label?: string; x: number; y: number; heading: number; nodeKind?: 'track' | 'platform' }[];
+  connectionNodes?: { key: string; label?: string; x: number; y: number; heading: number; nodeKind?: 'track' | 'platform'; compatibilityTag?: string; compatibleTags?: string[] }[];
 };
 
 export const PRIMARY_TRACK_KINDS: TrackKind[] = ['straight', 'curve', 'turnout', 'crossing', 'building', 'shape'];
-export const SECONDARY_TRACK_KINDS: SecondaryTrackKind[] = ['Viaduct', 'Double', 'Bridge'];
+export const SECONDARY_TRACK_KINDS: SecondaryTrackKind[] = ['Viaduct', 'Double', 'Bridge', 'Concrete Slab'];
 
 export const UNITRACK_PARTS: TrackPart[] = [
   { id: 'shape-rectangle', sku: 'SHAPE-RECT', name: 'Custom Rectangle', kind: 'shape', shapeType: 'rectangle', shapeWidth: 100, shapeHeight: 60, color: '#94a3b8', notes: 'Customizable top-down rectangle; edit width and height when selected' },
@@ -54,12 +54,35 @@ export const UNITRACK_PARTS: TrackPart[] = [
     { key: 'platform-left', label: 'Platform connector', x: -100, y: 0, heading: 0, nodeKind: 'platform' }
   ] },
   { id: 's248', sku: '20-000', name: 'S248 Straight', kind: 'straight', length: 248 },
+  { id: 'concrete-s248', sku: '20-875', name: 'Concrete Tie S248 Straight', kind: 'straight', length: 248, notes: 'Concrete-tie straight track, 248mm' },
+  { id: 'double-concrete-s248', sku: '20-004', name: 'Concrete Tie Double Track 248mm', kind: 'straight', secondaryKinds: ['Double'], length: 248, trackCenters: 33, notes: 'Concrete-tie double-track straight section on 33mm centers' },
+  { id: 'double-concrete-slab-s248', sku: '20-006', name: 'Concrete Slab Double Track 248mm', kind: 'straight', secondaryKinds: ['Double', 'Concrete Slab'], length: 248, trackCenters: 33, notes: 'Concrete slab double-track straight section on 33mm centers' },
   { id: 's186', sku: '20-010', name: 'S186 Straight', kind: 'straight', length: 186 },
+  { id: 'double-concrete-s186', sku: '20-012', name: 'Concrete Tie Double Track 186mm', kind: 'straight', secondaryKinds: ['Double'], length: 186, trackCenters: 33, notes: 'Concrete-tie double-track straight section on 33mm centers' },
+  { id: 'double-concrete-slab-s186', sku: '20-014', name: 'Concrete Slab Double Track 186mm', kind: 'straight', secondaryKinds: ['Double', 'Concrete Slab'], length: 186, trackCenters: 33, notes: 'Concrete slab double-track straight section on 33mm centers' },
   { id: 's124', sku: '20-020', name: 'S124 Straight', kind: 'straight', length: 124 },
+  { id: 'double-concrete-s124', sku: '20-023', name: 'Concrete Tie Double Track 124mm', kind: 'straight', secondaryKinds: ['Double'], length: 124, trackCenters: 33, notes: 'Concrete-tie double-track straight section on 33mm centers' },
+  { id: 'double-concrete-slab-s124', sku: '20-025', name: 'Concrete Slab Double Track 124mm', kind: 'straight', secondaryKinds: ['Double', 'Concrete Slab'], length: 124, trackCenters: 33, notes: 'Concrete slab double-track straight section on 33mm centers' },
   { id: 's64', sku: '20-030', name: 'S64 Straight', kind: 'straight', length: 64 },
   { id: 's62', sku: '20-040', name: 'S62 Straight', kind: 'straight', length: 62 },
   { id: 's62f', sku: '20-041', name: 'S62 Feeder', kind: 'straight', length: 62 },
+  { id: 'double-concrete-s62', sku: '20-042', name: 'Concrete Tie Double Track 62mm', kind: 'straight', secondaryKinds: ['Double'], length: 62, trackCenters: 33, notes: 'Concrete-tie double-track straight section on 33mm centers' },
+  { id: 'double-concrete-s62f', sku: '20-043', name: 'Concrete Tie Double Track Feeder 62mm', kind: 'straight', secondaryKinds: ['Double'], length: 62, trackCenters: 33, notes: 'Concrete-tie double-track feeder straight section on 33mm centers' },
+  { id: 'double-concrete-slab-s62', sku: '20-044', name: 'Concrete Slab Double Track 62mm', kind: 'straight', secondaryKinds: ['Double', 'Concrete Slab'], length: 62, trackCenters: 33, notes: 'Concrete slab double-track straight section on 33mm centers' },
+  { id: 'double-concrete-slab-s62f', sku: '20-049', name: 'Concrete Slab Double Track Feeder 62mm', kind: 'straight', secondaryKinds: ['Double', 'Concrete Slab'], length: 62, trackCenters: 33, notes: 'Concrete slab double-track feeder straight section on 33mm centers' },
   { id: 'expansion-78-108', sku: '20-050', name: 'Expansion Track 78–108mm', kind: 'straight', length: 108, minLength: 78, maxLength: 108, notes: 'Adjustable straight expansion track; drag end handle to resize between 78mm and 108mm' },
+  { id: 'double-widening-left-310', sku: '20-051', name: 'Concrete Tie Double Track Widening Left 310mm', kind: 'straight', secondaryKinds: ['Double'], length: 310, trackCenters: 33, diverging: 'left', notes: 'Concrete-tie double-track left-hand widening section, 310mm; left end centers are 33mm apart and right end centers are 66mm apart', connectionNodes: [
+    { key: 'upper-left', label: 'Upper left', x: 0, y: -16.5, heading: 0 },
+    { key: 'upper-right', label: 'Upper right', x: 310, y: -49.5, heading: 180 },
+    { key: 'lower-left', label: 'Lower left', x: 0, y: 16.5, heading: 0 },
+    { key: 'lower-right', label: 'Lower right', x: 310, y: 16.5, heading: 180 },
+  ] },
+  { id: 'double-widening-right-310', sku: '20-052', name: 'Concrete Tie Double Track Widening Right 310mm', kind: 'straight', secondaryKinds: ['Double'], length: 310, trackCenters: 33, diverging: 'right', notes: 'Concrete-tie double-track right-hand widening section, 310mm; left end centers are 66mm apart and right end centers are 33mm apart', connectionNodes: [
+    { key: 'upper-left', label: 'Upper left', x: 0, y: -49.5, heading: 0 },
+    { key: 'upper-right', label: 'Upper right', x: 310, y: -16.5, heading: 180 },
+    { key: 'lower-left', label: 'Lower left', x: 0, y: 16.5, heading: 0 },
+    { key: 'lower-right', label: 'Lower right', x: 310, y: 16.5, heading: 180 },
+  ] },
   { id: 'bumper-20-046', sku: '20-046', name: 'Bumper Type A', kind: 'straight', length: 95, isTerminal: true, notes: 'Long bumper with concrete stop.' },
   { id: 'bumper-20-047', sku: '20-047', name: 'Bumper Type B', kind: 'straight', length: 95, isTerminal: true, notes: 'Long bumper with rock filled wood stop.' },
   { id: 'bumper-20-048', sku: '20-048', name: 'Bumper Type C', kind: 'straight', length: 50, isTerminal: true, notes: 'Short bumper with posts stop.' },
@@ -82,6 +105,21 @@ export const UNITRACK_PARTS: TrackPart[] = [
   { id: 'r381-10', sku: '20-141', name: 'R381-10 Curve', kind: 'curve', radius: 381, angle: 10 },
   { id: 'r718-15', sku: '20-150', name: 'R718-15 Curve', kind: 'curve', radius: 718, angle: 15 },
   { id: 'r481-15', sku: '20-160', name: 'R481-15 Curve', kind: 'curve', radius: 481, angle: 15 },
+  { id: 'double-concrete-r414-381-45', sku: '20-181', name: 'Concrete Tie Double Track Curve R414/381-45', kind: 'curve', secondaryKinds: ['Double'], radius: 414, radius2: 381, angle: 45, notes: 'Concrete-tie double-track 45° curve with 414mm/381mm radii' },
+  { id: 'double-concrete-r414-381-22.5-left', sku: '20-182L', name: 'Concrete Tie Double Track Curve R414/381-22.5 Left', kind: 'curve', secondaryKinds: ['Double'], radius: 414, radius2: 381, angle: 22.5, diverging: 'left', notes: 'Concrete-tie double-track 22.5° left transition curve; right-side nodes only connect with 20-181, 20-183, or 20-185' },
+  { id: 'double-concrete-r414-381-22.5-right', sku: '20-182R', name: 'Concrete Tie Double Track Curve R414/381-22.5 Right', kind: 'curve', secondaryKinds: ['Double'], radius: 414, radius2: 381, angle: 22.5, diverging: 'right', notes: 'Concrete-tie double-track 22.5° right transition curve; left-side nodes only connect with 20-181, 20-183, or 20-185' },
+  { id: 'double-concrete-r315-282-45', sku: '20-183', name: 'Concrete Tie Double Track Curve R315/282-45', kind: 'curve', secondaryKinds: ['Double'], radius: 315, radius2: 282, angle: 45, notes: 'Concrete-tie double-track 45° curve with 315mm/282mm radii' },
+  { id: 'double-concrete-r315-282-22.5-left', sku: '20-184L', name: 'Concrete Tie Double Track Curve R315/282-22.5 Left', kind: 'curve', secondaryKinds: ['Double'], radius: 315, radius2: 282, angle: 22.5, diverging: 'left', notes: 'Concrete-tie double-track 22.5° left transition curve; right-side nodes only connect with 20-181, 20-183, or 20-185' },
+  { id: 'double-concrete-r315-282-22.5-right', sku: '20-184R', name: 'Concrete Tie Double Track Curve R315/282-22.5 Right', kind: 'curve', secondaryKinds: ['Double'], radius: 315, radius2: 282, angle: 22.5, diverging: 'right', notes: 'Concrete-tie double-track 22.5° right transition curve; left-side nodes only connect with 20-181, 20-183, or 20-185' },
+  { id: 'double-concrete-r480-447-45', sku: '20-185', name: 'Concrete Tie Double Track Curve R480/447-45', kind: 'curve', secondaryKinds: ['Double'], radius: 480, radius2: 447, angle: 45, notes: 'Concrete-tie double-track 45° curve with 480mm/447mm radii' },
+  { id: 'double-concrete-r480-447-22.5-left', sku: '20-186L', name: 'Concrete Tie Double Track Curve R480/447-22.5 Left', kind: 'curve', secondaryKinds: ['Double'], radius: 480, radius2: 447, angle: 22.5, diverging: 'left', notes: 'Concrete-tie double-track 22.5° left transition curve; right-side nodes only connect with 20-181, 20-183, or 20-185' },
+  { id: 'double-concrete-r480-447-22.5-right', sku: '20-186R', name: 'Concrete Tie Double Track Curve R480/447-22.5 Right', kind: 'curve', secondaryKinds: ['Double'], radius: 480, radius2: 447, angle: 22.5, diverging: 'right', notes: 'Concrete-tie double-track 22.5° right transition curve; left-side nodes only connect with 20-181, 20-183, or 20-185' },
+  { id: 'double-concrete-slab-r414-381-45', sku: '20-187', name: 'Concrete Slab Double Track Curve R414/381-45', kind: 'curve', secondaryKinds: ['Double', 'Concrete Slab'], radius: 414, radius2: 381, angle: 45, notes: 'Concrete slab double-track 45° curve with 414mm/381mm radii; special nodes compatible with the concrete double-curve family' },
+  { id: 'double-concrete-slab-r414-381-22.5-left', sku: '20-188L', name: 'Concrete Slab Double Track Curve R414/381-22.5 Left', kind: 'curve', secondaryKinds: ['Double', 'Concrete Slab'], radius: 414, radius2: 381, angle: 22.5, diverging: 'left', notes: 'Concrete slab double-track 22.5° left transition curve; right-side nodes only connect with the concrete double-curve family' },
+  { id: 'double-concrete-slab-r414-381-22.5-right', sku: '20-188R', name: 'Concrete Slab Double Track Curve R414/381-22.5 Right', kind: 'curve', secondaryKinds: ['Double', 'Concrete Slab'], radius: 414, radius2: 381, angle: 22.5, diverging: 'right', notes: 'Concrete slab double-track 22.5° right transition curve; left-side nodes only connect with the concrete double-curve family' },
+  { id: 'double-concrete-slab-viaduct-r414-381-45', sku: '20-544', name: 'Concrete Slab Double Track Viaduct Curve R414/381-45', kind: 'curve', secondaryKinds: ['Double', 'Viaduct', 'Concrete Slab'], radius: 414, radius2: 381, angle: 45, color: '#8f9499', notes: 'Concrete slab double-track viaduct 45° curve with 414mm/381mm radii; special nodes compatible with the concrete double-curve family' },
+  { id: 'double-concrete-slab-viaduct-r414-381-22.5-left', sku: '20-545L', name: 'Concrete Slab Double Track Viaduct Curve R414/381-22.5 Left', kind: 'curve', secondaryKinds: ['Double', 'Viaduct', 'Concrete Slab'], radius: 414, radius2: 381, angle: 22.5, diverging: 'left', color: '#8f9499', notes: 'Concrete slab double-track viaduct 22.5° left transition curve; right-side nodes only connect with the concrete double-curve family' },
+  { id: 'double-concrete-slab-viaduct-r414-381-22.5-right', sku: '20-545R', name: 'Concrete Slab Double Track Viaduct Curve R414/381-22.5 Right', kind: 'curve', secondaryKinds: ['Double', 'Viaduct', 'Concrete Slab'], radius: 414, radius2: 381, angle: 22.5, diverging: 'right', color: '#8f9499', notes: 'Concrete slab double-track viaduct 22.5° right transition curve; left-side nodes only connect with the concrete double-curve family' },
   { id: 'r216-45', sku: '20-170', name: 'R216-45 Curve', kind: 'curve', radius: 216, angle: 45 },
   { id: 'r216-15', sku: '20-171', name: 'R216-15 Curve', kind: 'curve', radius: 216, angle: 15 },
   { id: 'r183-45', sku: '20-172', name: 'R183-45 Compact Curve', kind: 'curve', radius: 183, angle: 45, notes: 'Compact 183mm radius curve' },
@@ -99,11 +137,11 @@ export const UNITRACK_PARTS: TrackPart[] = [
   { id: 'crossing-90', sku: '20-320', name: '90° Crossing', kind: 'crossing', length: 124, angle: 90, notes: 'Single-track 90° crossing, 124mm' },
   { id: 'double-crossover', sku: '20-210', name: 'Double Crossover', kind: 'crossing', secondaryKinds: ['Double'], length: 310, trackCenters: 33, notes: 'Four main connection points on 33mm track centers' },
   { id: 'viaduct-s248', sku: '20-400', name: 'S248 Single Track Viaduct', kind: 'straight', secondaryKinds: ['Viaduct'], length: 248, color: '#8f9499', notes: 'Single-track straight viaduct, 248mm' },
-  { id: 'double-viaduct-s248', sku: '20-401', name: 'Double Straight Viaduct 248mm', kind: 'straight', secondaryKinds: ['Double', 'Viaduct'], length: 248, trackCenters: 33, color: '#8f9499', notes: 'Double-track elevated viaduct straight section on 33mm centers with roadbeds plus filled center deck' },
+  { id: 'double-viaduct-s248', sku: '20-401', name: 'Concrete Slab Double Track Straight Viaduct 248mm', kind: 'straight', secondaryKinds: ['Double', 'Viaduct', 'Concrete Slab'], length: 248, trackCenters: 33, color: '#8f9499', notes: 'Concrete slab double-track straight viaduct section on 33mm centers with edge walls' },
   { id: 'viaduct-s186', sku: '20-410', name: 'S186 Single Track Viaduct', kind: 'straight', secondaryKinds: ['Viaduct'], length: 186, color: '#8f9499', notes: 'Single-track straight viaduct, 186mm' },
-  { id: 'double-viaduct-s186', sku: '20-411', name: 'Double Straight Viaduct 186mm', kind: 'straight', secondaryKinds: ['Double', 'Viaduct'], length: 186, trackCenters: 33, color: '#8f9499', notes: 'Double-track concrete slab viaduct, 186mm' },
+  { id: 'double-viaduct-s186', sku: '20-411', name: 'Concrete Slab Double Track Straight Viaduct 186mm', kind: 'straight', secondaryKinds: ['Double', 'Viaduct', 'Concrete Slab'], length: 186, trackCenters: 33, color: '#8f9499', notes: 'Concrete slab double-track straight viaduct section on 33mm centers with edge walls' },
   { id: 'viaduct-s124', sku: '20-420', name: 'S124 Single Track Viaduct', kind: 'straight', secondaryKinds: ['Viaduct'], length: 124, color: '#8f9499', notes: 'Single-track straight viaduct, 124mm' },
-  { id: 'double-viaduct-s124', sku: '20-422', name: 'Double Straight Viaduct 124mm', kind: 'straight', secondaryKinds: ['Double', 'Viaduct'], length: 124, trackCenters: 33, color: '#8f9499', notes: 'Double-track concrete slab viaduct, 124mm' },
+  { id: 'double-viaduct-s124', sku: '20-422', name: 'Concrete Slab Double Track Straight Viaduct 124mm', kind: 'straight', secondaryKinds: ['Double', 'Viaduct', 'Concrete Slab'], length: 124, trackCenters: 33, color: '#8f9499', notes: 'Concrete slab double-track straight viaduct section on 33mm centers with edge walls' },
   { id: 'viaduct-s62', sku: '20-440', name: 'S62 Single Track Viaduct', kind: 'straight', secondaryKinds: ['Viaduct'], length: 62, color: '#8f9499', notes: 'Single-track straight viaduct, 62mm' },
   { id: 'viaduct-r249-45', sku: '20-505', name: 'R249-45 Single Track Viaduct Curve', kind: 'curve', secondaryKinds: ['Viaduct'], radius: 249, angle: 45, color: '#8f9499', notes: 'Single-track viaduct curve, R249 45°' },
   { id: 'viaduct-r282-45', sku: '20-510', name: 'R282-45 Single Track Viaduct Curve', kind: 'curve', secondaryKinds: ['Viaduct'], radius: 282, angle: 45, color: '#8f9499', notes: 'Single-track viaduct curve, R282 45°' },
@@ -117,6 +155,14 @@ export const UNITRACK_PARTS: TrackPart[] = [
   { id: 'truss-bridge-gray-s248', sku: '20-432', name: 'S248 Single Track Truss Bridge Gray', kind: 'straight', secondaryKinds: ['Bridge'], length: 248, color: '#777777', bridgeStyle: 'truss', notes: 'Single-track truss bridge, gray, 248mm' },
   { id: 'truss-bridge-silver-s248', sku: '20-433', name: 'S248 Single Track Truss Bridge Silver', kind: 'straight', secondaryKinds: ['Bridge'], length: 248, color: '#9ca3af', bridgeStyle: 'truss', notes: 'Single-track truss bridge, silver, 248mm' },
   { id: 'truss-bridge-black-s248', sku: '20-434', name: 'S248 Single Track Truss Bridge Black', kind: 'straight', secondaryKinds: ['Bridge'], length: 248, color: '#333333', bridgeStyle: 'truss', notes: 'Single-track truss bridge, black, 248mm' },
+  { id: 'double-truss-bridge-light-blue-s248', sku: '20-436', name: 'Double Track Truss Bridge Light Blue 248mm', kind: 'straight', secondaryKinds: ['Double', 'Bridge'], length: 248, trackCenters: 33, color: '#9bdcf4', bridgeStyle: 'truss', notes: 'Double-track light blue truss bridge, 248mm' },
+  { id: 'double-truss-bridge-gray-s248', sku: '20-437', name: 'Double Track Truss Bridge Gray 248mm', kind: 'straight', secondaryKinds: ['Double', 'Bridge'], length: 248, trackCenters: 33, color: '#9ca3af', bridgeStyle: 'truss', notes: 'Double-track gray truss bridge, 248mm' },
+  { id: 'double-truss-bridge-black-s248', sku: '20-438', name: 'Double Track Truss Bridge Black 248mm', kind: 'straight', secondaryKinds: ['Double', 'Bridge'], length: 248, trackCenters: 33, color: '#262b2f', bridgeStyle: 'truss', notes: 'Double-track dark gray black truss bridge, 248mm' },
+  { id: 'double-truss-bridge-light-green-s248', sku: '20-439', name: 'Double Track Truss Bridge Light Green 248mm', kind: 'straight', secondaryKinds: ['Double', 'Bridge'], length: 248, trackCenters: 33, color: '#a8d8b4', bridgeStyle: 'truss', notes: 'Double-track light green truss bridge, 248mm' },
+  { id: 'double-plate-girder-bridge-light-blue-s186', sku: '20-455', name: 'Double Track Plate Girder Bridge Light Blue 186mm', kind: 'straight', secondaryKinds: ['Double', 'Bridge'], length: 186, trackCenters: 33, color: '#9bdcf4', bridgeStyle: 'plate-girder', notes: 'Double-track light blue plate girder bridge, 186mm' },
+  { id: 'double-plate-girder-bridge-light-green-s186', sku: '20-456', name: 'Double Track Plate Girder Bridge Light Green 186mm', kind: 'straight', secondaryKinds: ['Double', 'Bridge'], length: 186, trackCenters: 33, color: '#a8d8b4', bridgeStyle: 'plate-girder', notes: 'Double-track light green plate girder bridge, 186mm' },
+  { id: 'double-plate-girder-bridge-gray-s186', sku: '20-457', name: 'Double Track Plate Girder Bridge Gray 186mm', kind: 'straight', secondaryKinds: ['Double', 'Bridge'], length: 186, trackCenters: 33, color: '#9ca3af', bridgeStyle: 'plate-girder', notes: 'Double-track gray plate girder bridge, 186mm' },
+  { id: 'double-plate-girder-bridge-black-s186', sku: '20-458', name: 'Double Track Plate Girder Bridge Black 186mm', kind: 'straight', secondaryKinds: ['Double', 'Bridge'], length: 186, trackCenters: 33, color: '#262b2f', bridgeStyle: 'plate-girder', notes: 'Double-track dark gray black plate girder bridge, 186mm' },
   { id: 'plate-girder-bridge-red-s186', sku: '20-450', name: 'S186 Single Track Plate Girder Bridge Red', kind: 'straight', secondaryKinds: ['Bridge'], length: 186, color: '#a53b32', bridgeStyle: 'plate-girder', notes: 'Single-track plate girder bridge, red, 186mm' },
   { id: 'plate-girder-bridge-green-s186', sku: '20-451', name: 'S186 Single Track Plate Girder Bridge Green', kind: 'straight', secondaryKinds: ['Bridge'], length: 186, color: '#4f7f4f', bridgeStyle: 'plate-girder', notes: 'Single-track plate girder bridge, green, 186mm' },
   { id: 'plate-girder-bridge-gray-s186', sku: '20-452', name: 'S186 Single Track Plate Girder Bridge Gray', kind: 'straight', secondaryKinds: ['Bridge'], length: 186, color: '#777777', bridgeStyle: 'plate-girder', notes: 'Single-track plate girder bridge, gray, 186mm' },
