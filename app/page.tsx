@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowDown, ArrowUp, ChevronDown, Clipboard, ClipboardPaste, Download, Eye, EyeOff, FilePlus2, FileSpreadsheet, FlipHorizontal2, FolderOpen, Grid3X3, Lock, Maximize2, Moon, MousePointer2, Plus, RotateCcw, RotateCw, Save, Sun, Trash2, Unlock, Upload, ZoomIn, ZoomOut } from 'lucide-react';
+import { ArrowDown, ArrowUp, ChevronDown, Clipboard, ClipboardPaste, Download, Eye, EyeOff, FilePlus2, FileSpreadsheet, FlipHorizontal2, FolderOpen, Grid3X3, Lock, Maximize2, Moon, MousePointer2, Plus, RotateCcw, RotateCw, Save, Search, Sun, Trash2, Unlock, Upload, X, ZoomIn, ZoomOut } from 'lucide-react';
 import { PRIMARY_TRACK_KINDS, SECONDARY_TRACK_KINDS, UNITRACK_PARTS, partLabel, SecondaryTrackKind, TrackKind, TrackPart } from '@/lib/unitrack';
 import { clamp, connectors, degToRad, isDoubleTrack, isExpansionTrack, nodeHeight, norm, partLength, PlacedTrack, Pose, snap } from '@/lib/geometry';
 import { TrackShape } from '@/lib/renderers/TrackShape';
@@ -42,6 +42,7 @@ export default function Page() {
   const [shapeColors, setShapeColors] = useState<string[]>([]);
   const [partFilters, setPartFilters] = useState<PartFilter[]>([]);
   const [partFilterMode, setPartFilterMode] = useState<PartFilterMode>('or');
+  const [partSearch, setPartSearch] = useState('');
   const [parts, setParts] = useState<TrackPart[]>(UNITRACK_PARTS);
   const [items, setItems] = useState<PlacedTrack[]>([]);
   const [ownedStock, setOwnedStock] = useState<Record<string, number>>({});
@@ -209,13 +210,26 @@ export default function Page() {
     };
   }, [frameSize.width, frameSize.height, zoom, layoutBounds]);
   const filteredParts = useMemo(() => {
-    if (partFilters.length === 0 || partFilters.includes('all')) return parts;
-    const selectedFilters = partFilters.filter(filter => filter !== 'all');
-    const partHasFilter = (part: TrackPart, filter: PartFilter) => part.kind === filter || part.secondaryKinds?.includes(filter as SecondaryTrackKind);
-    return parts.filter(part => partFilterMode === 'and'
-      ? selectedFilters.every(filter => partHasFilter(part, filter))
-      : selectedFilters.some(filter => partHasFilter(part, filter)));
-  }, [parts, partFilters, partFilterMode]);
+    const query = partSearch.trim().toLowerCase();
+    const typeFilteredParts = (() => {
+      if (partFilters.length === 0 || partFilters.includes('all')) return parts;
+      const selectedFilters = partFilters.filter(filter => filter !== 'all');
+      const partHasFilter = (part: TrackPart, filter: PartFilter) => part.kind === filter || part.secondaryKinds?.includes(filter as SecondaryTrackKind);
+      return parts.filter(part => partFilterMode === 'and'
+        ? selectedFilters.every(filter => partHasFilter(part, filter))
+        : selectedFilters.some(filter => partHasFilter(part, filter)));
+    })();
+    if (!query) return typeFilteredParts;
+    return typeFilteredParts.filter(part => [
+      part.sku,
+      part.name,
+      part.kind,
+      part.secondaryKinds?.join(' '),
+      part.notes,
+      partLabel(part),
+    ].filter(Boolean).join(' ').toLowerCase().includes(query));
+  }, [parts, partFilters, partFilterMode, partSearch]);
+  const partSearchLabel = partSearch.trim() ? `${filteredParts.length}/${parts.length} parts` : `${filteredParts.length} parts`;
   const isDark = theme === 'dark';
   const selectedUid = selectedUids[selectedUids.length - 1] ?? null;
   const selectedItem = items.find(i => i.uid === selectedUid);
@@ -1515,6 +1529,19 @@ export default function Page() {
           <button onClick={() => setTool('place')} className={`ui-button ui-button-md rounded-xl px-3 py-2 text-sm ${tool === 'place' ? 'btn-success' : 'btn'}`}>Place</button>
           <button onClick={() => setTool('select')} className={`ui-button ui-button-md rounded-xl px-3 py-2 text-sm ${tool === 'select' ? 'btn-success' : 'btn'}`}><MousePointer2 className="h-4 w-4"/>Select</button>
         </div>
+        <div className="mb-2 shrink-0">
+          <label className="field flex items-center gap-2 rounded-xl px-2 py-2">
+            <Search className="h-4 w-4 shrink-0 muted" />
+            <input
+              value={partSearch}
+              onChange={e => setPartSearch(e.target.value)}
+              placeholder="Search SKU or name"
+              className="min-w-0 flex-1 bg-transparent text-sm outline-none"
+            />
+            {partSearch && <button type="button" onClick={() => setPartSearch('')} className="ui-button ui-button-sm btn rounded-lg px-1.5 py-1" aria-label="Clear part search"><X className="h-3.5 w-3.5" /></button>}
+          </label>
+          <div className="muted mt-1 px-1 text-[11px]">{partSearchLabel}</div>
+        </div>
         <div className="group mb-2 shrink-0 rounded-xl border border-transparent p-1 transition hover:border-[var(--panel-border)] focus-within:border-[var(--panel-border)]">
           <div className="flex items-center justify-between gap-2 px-1 py-1">
             <h3 className="text-sm font-semibold">Filter Parts</h3>
@@ -1556,6 +1583,7 @@ export default function Page() {
           </div>
         </div>
         <div className="min-h-0 flex-1 space-y-2 overflow-auto pr-1">
+          {filteredParts.length === 0 && <div className="subpanel rounded-xl p-3 text-xs muted">No parts match the current search and filters.</div>}
           {filteredParts.map(p => <button
             key={p.id}
             draggable
