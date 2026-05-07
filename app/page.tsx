@@ -11,6 +11,7 @@ const BOARD_W = 1800;
 const BOARD_H = 1000;
 const GRID = 33;
 const SNAP_DISTANCE_MM = 24;
+const AUTOSAVE_LAYOUT_KEY = 'unitrack-planner-layout-autosave';
 type Tool = 'select' | 'place';
 type Theme = 'dark' | 'light';
 type RenderDetail = 'high' | 'low';
@@ -60,6 +61,7 @@ export default function Page() {
   const [ghost, setGhost] = useState<GhostTrack>(null);
   const [runSuggestions, setRunSuggestions] = useState<RunSuggestion[]>([]);
   const [dropPartId, setDropPartId] = useState<string | null>(null);
+  const [layoutAutosaveReady, setLayoutAutosaveReady] = useState(false);
   const drag = useRef<{ uids: string[]; startX: number; startY: number; origins: Record<string, { x: number; y: number }> } | null>(null);
   const resizeDrag = useRef<{ uid: string; handle: 'start' | 'end'; startLength: number; startX: number; startY: number; startItemX: number; startItemY: number; rotation: number; flip?: boolean; min: number; max: number } | null>(null);
   const boxDrag = useRef<{ x: number; y: number } | null>(null);
@@ -116,6 +118,16 @@ export default function Page() {
   const canUndo = historyPastRef.current.length > 0;
   const canRedo = historyFutureRef.current.length > 0;
 
+  function normalizeLayoutData(data: any) {
+    const importedLayers: LayoutLayer[] = Array.isArray(data.layers) && data.layers.length
+      ? data.layers.map((layer: any, index: number) => ({ id: String(layer.id || uid()), name: String(layer.name || `Layer ${index + 1}`), visible: layer.visible !== false, locked: !!layer.locked }))
+      : [{ id: BASE_LAYER_ID, name: 'Base', visible: true, locked: false }];
+    const validLayerIds = new Set(importedLayers.map(layer => layer.id));
+    const fallbackLayerId = importedLayers[0].id;
+    const importedItems = (data.items ?? []).map((item: PlacedTrack) => ({ ...item, layerId: validLayerIds.has(item.layerId ?? '') ? item.layerId : fallbackLayerId }));
+    const importedActiveLayerId = validLayerIds.has(data.activeLayerId) ? data.activeLayerId : fallbackLayerId;
+    return { importedLayers, importedItems, importedActiveLayerId };
+  }
 
   useEffect(() => {
     setMounted(true);
@@ -124,7 +136,33 @@ export default function Page() {
       rootStyle.getPropertyValue(`--shape-color-${i + 1}`).trim()
     ).filter(Boolean);
     setShapeColors(cssShapeColors);
+
+    try {
+      const savedLayout = localStorage.getItem(AUTOSAVE_LAYOUT_KEY);
+      if (savedLayout) {
+        const { importedLayers, importedItems, importedActiveLayerId } = normalizeLayoutData(JSON.parse(savedLayout));
+        setLayers(importedLayers);
+        setItems(importedItems);
+        setActiveLayerId(importedActiveLayerId);
+        setSelectedUids([]);
+        if (importedItems.length > 0) setMessage('Restored autosaved layout.');
+      }
+    } catch {
+      localStorage.removeItem(AUTOSAVE_LAYOUT_KEY);
+    } finally {
+      setLayoutAutosaveReady(true);
+    }
   }, []);
+
+  useEffect(() => {
+    if (!layoutAutosaveReady) return;
+    try {
+      localStorage.setItem(AUTOSAVE_LAYOUT_KEY, JSON.stringify({ version: 4, items, layers, activeLayerId }));
+    } catch {
+      setMessage('Could not autosave layout in this browser.');
+    }
+  }, [items, layers, activeLayerId, layoutAutosaveReady]);
+
   useEffect(() => {
     const frame = canvasFrameRef.current;
     if (!frame) return;
@@ -531,7 +569,31 @@ export default function Page() {
     if (selectedUids.length === 0) return;
     const selected = new Set(selectedUids);
     recordHistory();
-    setItems(prev => prev.map(i => selected.has(i.uid) && !isItemLocked(i) ? gridOrEndpointSnap({ ...i, rotation: norm(i.rotation + delta) }, prev) : i));
+    setItems(prev => {
+      const editableSelected = prev.filter(item => selected.has(item.uid) && !isItemLocked(item));
+      if (editableSelected.length <= 1) {
+        return prev.map(i => selected.has(i.uid) && !isItemLocked(i) ? gridOrEndpointSnap({ ...i, rotation: norm(i.rotation + delta) }, prev) : i);
+      }
+      const selectionPoints = editableSelected.flatMap(itemSelectionPoints);
+      const minX = Math.min(...selectionPoints.map(point => point.x));
+      const maxX = Math.max(...selectionPoints.map(point => point.x));
+      const minY = Math.min(...selectionPoints.map(point => point.y));
+      const maxY = Math.max(...selectionPoints.map(point => point.y));
+      const centerX = (minX + maxX) / 2;
+      const centerY = (minY + maxY) / 2;
+      const r = degToRad(delta);
+      return prev.map(i => {
+        if (!selected.has(i.uid) || isItemLocked(i)) return i;
+        const dx = i.x - centerX;
+        const dy = i.y - centerY;
+        return {
+          ...i,
+          x: centerX + dx * Math.cos(r) - dy * Math.sin(r),
+          y: centerY + dx * Math.sin(r) + dy * Math.cos(r),
+          rotation: norm(i.rotation + delta),
+        };
+      });
+    });
   }
 
   function flipSelected() {
@@ -546,8 +608,20 @@ export default function Page() {
       return;
     }
     recordHistory();
-    setItems(prev => prev.map(i => selected.has(i.uid) && !isItemLocked(i) ? gridOrEndpointSnap({ ...i, flip: !i.flip }, prev) : i));
-    setMessage(`Flipped ${editableCount} selected piece${editableCount === 1 ? '' : 's'}.`);
+    setItems(prev => {
+      const editableSelected = prev.filter(item => selected.has(item.uid) && !isItemLocked(item));
+      if (editableSelected.length <= 1) {
+        return prev.map(i => selected.has(i.uid) && !isItemLocked(i) ? gridOrEndpointSnap({ ...i, flip: !i.flip }, prev) : i);
+      }
+      const selectionPoints = editableSelected.flatMap(itemSelectionPoints);
+      const minX = Math.min(...selectionPoints.map(point => point.x));
+      const maxX = Math.max(...selectionPoints.map(point => point.x));
+      const centerX = (minX + maxX) / 2;
+      return prev.map(i => selected.has(i.uid) && !isItemLocked(i)
+        ? { ...i, x: 2 * centerX - i.x, rotation: norm(180 - i.rotation), flip: !i.flip }
+        : i);
+    });
+    setMessage(`Flipped ${editableCount} selected piece${editableCount === 1 ? '' : 's'}${editableCount > 1 ? ' as a group' : ''}.`);
   }
 
   function performDeleteSelected() {
@@ -1039,15 +1113,10 @@ export default function Page() {
 
   async function importJson(file: File) {
     const data = JSON.parse(await file.text());
-    const importedLayers: LayoutLayer[] = Array.isArray(data.layers) && data.layers.length
-      ? data.layers.map((layer: any, index: number) => ({ id: String(layer.id || uid()), name: String(layer.name || `Layer ${index + 1}`), visible: layer.visible !== false, locked: !!layer.locked }))
-      : [{ id: BASE_LAYER_ID, name: 'Base', visible: true, locked: false }];
-    const validLayerIds = new Set(importedLayers.map(layer => layer.id));
-    const fallbackLayerId = importedLayers[0].id;
-    const importedItems = (data.items ?? []).map((item: PlacedTrack) => ({ ...item, layerId: validLayerIds.has(item.layerId ?? '') ? item.layerId : fallbackLayerId }));
+    const { importedLayers, importedItems, importedActiveLayerId } = normalizeLayoutData(data);
     recordHistory();
     setLayers(importedLayers);
-    setActiveLayerId(validLayerIds.has(data.activeLayerId) ? data.activeLayerId : fallbackLayerId);
+    setActiveLayerId(importedActiveLayerId);
     setItems(importedItems);
     setSelectedUids([]);
     setMessage('Loaded layout JSON.');

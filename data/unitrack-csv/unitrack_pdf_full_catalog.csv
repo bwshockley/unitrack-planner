@@ -60,6 +60,8 @@ sourcePage,symbol,sku,englishName,category,appKind,secondaryKinds,lengthMm,radiu
 1-6,20-220,20-220,#4 Left Turnout,turnout,turnout,,124,481,,15,,,,,,Compact #4 turnout; three connection points,included_in_app_native_csv
 1-6,20-221,20-221,#4 Right Turnout,turnout,turnout,,124,481,,15,,,,,,Compact #4 turnout; three connection points,included_in_app_native_csv
 1-6,20-222,20-222,#2 Wye Turnout,turnout,turnout,,,481,,15,,,,,,Wye turnout with two R481 15° diverging routes,included_in_app_native_csv
+1-6,20-240,20-240,Compact R150-45 Left Turnout,turnout,turnout,,124,150,,45,,,,,,Compact EP150-45L left turnout with 124mm straight route and R150 45° diverging route,included_in_app_native_csv
+1-6,20-241,20-241,Compact R150-45 Right Turnout,turnout,turnout,,124,150,,45,,,,,,Compact EP150-45R right turnout with 124mm straight route and R150 45° diverging route,included_in_app_native_csv
 1-6,20-230,20-230,Double Track Single Crossover Left,crossing,crossing,Double,248,,,,,,,,,"#4 single crossover, left, 248mm overall length",included_in_app_native_csv
 1-6,20-231,20-231,Double Track Single Crossover Right,crossing,crossing,Double,248,,,,,,,,,"#4 single crossover, right, 248mm overall length",included_in_app_native_csv
 1,TT,20-283,Electric turntable,turntable,,,,,,,,,,,,PDF page 1,catalog_only

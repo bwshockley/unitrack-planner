@@ -74,6 +74,8 @@ ep718-15r,20-203,#6 Right Turnout,turnout,,186,,,718,,15,right,,,,,,,,,,,,,
 ep481-15l,20-220,#4 Left Turnout,turnout,,124,,,481,,15,left,,,,,,,,,,,,,Compact #4 turnout; three connection points
 ep481-15r,20-221,#4 Right Turnout,turnout,,124,,,481,,15,right,,,,,,,,,,,,,Compact #4 turnout; three connection points
 wy481-15,20-222,#2 Wye Turnout,turnout,,,,,481,,15,wye,,,,,,,,,,,,,Wye turnout with two R481 15° diverging routes
+ep150-45l,20-240,Compact R150-45 Left Turnout,turnout,,124,,,150,,45,left,,,,,,,,,,,,,Compact EP150-45L left turnout with 124mm straight route and R150 45° diverging route
+ep150-45r,20-241,Compact R150-45 Right Turnout,turnout,,124,,,150,,45,right,,,,,,,,,,,,,Compact EP150-45R right turnout with 124mm straight route and R150 45° diverging route
 single-crossover-left,20-230,Double Track Single Crossover Left,crossing,Double,248,,,,,,left,33,,,,,,,,,,,,"#4 single crossover, left, 248mm overall length"
 single-crossover-right,20-231,Double Track Single Crossover Right,crossing,Double,248,,,,,,right,33,,,,,,,,,,,,"#4 single crossover, right, 248mm overall length"
 crossing-15-left,20-300,15° Crossing Left,crossing,,186,,,,,15,left,,,,,,,,,,,,,"Single-track 15° left crossing, 186mm"

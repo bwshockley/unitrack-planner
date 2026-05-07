@@ -1453,7 +1453,7 @@ export function TrackShape({
       const sign = part.diverging === 'left' ? -1 : 1;
       const ex = r * Math.sin(degToRad(a));
       const ey = sign * r * (1 - Math.cos(degToRad(a)));
-      shape = !useLowDetail && ['20-202', '20-203', '20-220', '20-221'].includes(part.sku)
+      shape = !useLowDetail && ['20-202', '20-203', '20-220', '20-221', '20-240', '20-241'].includes(part.sku)
         ? standardTurnoutShape(ex, ey, len, 'turnout-standard-detail')
         : <>
         {(layer === 'roadbed' || layer === 'both') && <>
