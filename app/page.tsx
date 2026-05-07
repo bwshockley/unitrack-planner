@@ -1402,36 +1402,45 @@ export default function Page() {
           <button onClick={() => setTool('place')} className={`ui-button ui-button-md rounded-xl px-3 py-2 text-sm ${tool === 'place' ? 'btn-success' : 'btn'}`}>Place</button>
           <button onClick={() => setTool('select')} className={`ui-button ui-button-md rounded-xl px-3 py-2 text-sm ${tool === 'select' ? 'btn-success' : 'btn'}`}><MousePointer2 className="h-4 w-4"/>Select</button>
         </div>
-        <div className="mb-2 flex shrink-0 items-center justify-between gap-2">
-          <h3 className="text-sm font-semibold">Filter Parts</h3>
-          <div className="subpanel flex rounded-xl p-1 text-[11px]" role="group" aria-label="Part filter matching mode">
-            <button
-              type="button"
-              onClick={() => setPartFilterMode('and')}
-              className={`rounded-lg px-2 py-1 font-semibold ${partFilterMode === 'and' ? 'btn-primary' : 'muted'}`}
-              title="Show only parts that match every selected filter"
-            >AND</button>
-            <button
-              type="button"
-              onClick={() => setPartFilterMode('or')}
-              className={`rounded-lg px-2 py-1 font-semibold ${partFilterMode === 'or' ? 'btn-primary' : 'muted'}`}
-              title="Show parts that match any selected filter"
-            >OR</button>
+        <div className="group mb-2 shrink-0 rounded-xl border border-transparent p-1 transition hover:border-[var(--panel-border)] focus-within:border-[var(--panel-border)]">
+          <div className="flex items-center justify-between gap-2 px-1 py-1">
+            <h3 className="text-sm font-semibold">Filter Parts</h3>
+            <span className="muted truncate text-[11px]">
+              {partFilters.length === 0 || partFilters.includes('all') ? 'All parts' : `${partFilterMode.toUpperCase()} ${partFilters.length} filter${partFilters.length === 1 ? '' : 's'}`}
+            </span>
           </div>
-        </div>
-        <div className="mb-2 grid shrink-0 grid-cols-2 gap-2">
-          {(['all', ...PRIMARY_TRACK_KINDS, ...SECONDARY_TRACK_KINDS] as PartFilter[]).map(filter => {
-            const active = filter === 'all' ? partFilters.length === 0 || partFilters.includes('all') : partFilters.includes(filter);
-            return <button
-              key={filter}
-              onClick={() => setPartFilters(prev => {
-                if (filter === 'all') return [];
-                const next = prev.filter(f => f !== 'all');
-                return next.includes(filter) ? next.filter(f => f !== filter) : [...next, filter];
+          <div className="max-h-0 overflow-hidden opacity-0 transition-all duration-200 group-hover:max-h-96 group-hover:opacity-100 group-focus-within:max-h-96 group-focus-within:opacity-100">
+            <div className="flex items-center justify-end pb-2 pt-1">
+              <div className="subpanel flex rounded-xl p-1 text-[11px]" role="group" aria-label="Part filter matching mode">
+                <button
+                  type="button"
+                  onClick={() => setPartFilterMode('and')}
+                  className={`rounded-lg px-2 py-1 font-semibold ${partFilterMode === 'and' ? 'btn-primary' : 'muted'}`}
+                  title="Show only parts that match every selected filter"
+                >AND</button>
+                <button
+                  type="button"
+                  onClick={() => setPartFilterMode('or')}
+                  className={`rounded-lg px-2 py-1 font-semibold ${partFilterMode === 'or' ? 'btn-primary' : 'muted'}`}
+                  title="Show parts that match any selected filter"
+                >OR</button>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {(['all', ...PRIMARY_TRACK_KINDS, ...SECONDARY_TRACK_KINDS] as PartFilter[]).map(filter => {
+                const active = filter === 'all' ? partFilters.length === 0 || partFilters.includes('all') : partFilters.includes(filter);
+                return <button
+                  key={filter}
+                  onClick={() => setPartFilters(prev => {
+                    if (filter === 'all') return [];
+                    const next = prev.filter(f => f !== 'all');
+                    return next.includes(filter) ? next.filter(f => f !== filter) : [...next, filter];
+                  })}
+                  className={`rounded-xl px-2 py-2 text-xs ${active ? 'btn-primary' : 'btn'}`}
+                >{filter === 'all' ? 'All' : String(filter).charAt(0).toUpperCase() + String(filter).slice(1)}</button>;
               })}
-              className={`rounded-xl px-2 py-2 text-xs ${active ? 'btn-primary' : 'btn'}`}
-            >{filter === 'all' ? 'All' : String(filter).charAt(0).toUpperCase() + String(filter).slice(1)}</button>;
-          })}
+            </div>
+          </div>
         </div>
         <div className="min-h-0 flex-1 space-y-2 overflow-auto pr-1">
           {filteredParts.map(p => <button

@@ -35,7 +35,7 @@ export function TrackShape({
 }) {
   const railStroke = ghost ? 'var(--rail-ghost-stroke)' : selected ? 'var(--rail-selected-stroke)' : 'var(--rail-stroke)';
   const isConcreteSlabPart = part.secondaryKinds?.includes('Concrete Slab') || /\bslab\b/i.test(`${part.name} ${part.notes ?? ''}`);
-  const isConcreteTiePart = /\bconcrete\b/i.test(`${part.name} ${part.notes ?? ''}`) && !isConcreteSlabPart;
+  const isConcreteTiePart = part.secondaryKinds?.includes('Concrete Tie') || (/\bconcrete\s*tie\b/i.test(`${part.name} ${part.notes ?? ''}`) && !isConcreteSlabPart);
   const roadbedStroke = part.color || (isConcreteTiePart ? 'var(--concrete-tie-stroke)' : 'var(--roadbed-stroke)');
   const isDouble = isDoubleTrack(part);
   const isViaduct = part.secondaryKinds?.includes('Viaduct') ?? false;

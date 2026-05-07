@@ -1,21 +1,21 @@
 sourcePage,symbol,sku,englishName,category,appKind,secondaryKinds,lengthMm,radiusMm,radius2Mm,angleDeg,color,bridgeStyle,isTerminal,widthMm,depthMm,notes,appImportStatus
 1-6,20-000,20-000,S248 Straight,straight,straight,,248,,,,,,,,,,included_in_app_native_csv
-2,WS248 PC,20-004,Concrete tie straight 248mm,straight,straight,,248,,,,,,,,,PDF page 2,catalog_only
+2,WS248 PC,20-004,Concrete tie straight 248mm,straight,straight,Concrete Tie,248,,,,,,,,,PDF page 2,catalog_only
 2,WS248S,20-006,Wood tie double-track straight 248mm,straight,straight,Double,248,,,,,,,,,PDF page 2,catalog_only
 1-6,20-010,20-010,S186 Straight,straight,straight,,186,,,,,,,,,,included_in_app_native_csv
-2,WS186 PC,20-012,Concrete tie straight 186mm,straight,straight,,186,,,,,,,,,PDF page 2,catalog_only
+2,WS186 PC,20-012,Concrete tie straight 186mm,straight,straight,Concrete Tie,186,,,,,,,,,PDF page 2,catalog_only
 2,WS186S,20-014,Wood tie double-track straight 186mm,straight,straight,Double,186,,,,,,,,,PDF page 2,catalog_only
 1-6,20-020,20-020,S124 Straight,straight,straight,,124,,,,,,,,,,included_in_app_native_csv
 1,S124C,20-021,Road crossing straight 124mm,road/accessory,straight,,124,,,,,,,,,PDF page 1; road crossing track accessory,catalog_only
-2,WS124 PC,20-023,Concrete tie straight 124mm,straight,straight,,124,,,,,,,,,PDF page 2,catalog_only
+2,WS124 PC,20-023,Concrete tie straight 124mm,straight,straight,Concrete Tie,124,,,,,,,,,PDF page 2,catalog_only
 2,WS124S,20-025,Wood tie double-track straight 124mm,straight,straight,Double,124,,,,,,,,,PDF page 2,catalog_only
 1,S124C-B,20-026,Grade crossing road surface B 124mm,road/accessory,,,,,,,,,,,,PDF page 1,catalog_only
 1,S124C-S,20-027,Crossing slope/approach road,road/accessory,,,,,,,,,,,,PDF page 1,catalog_only
 1-6,20-030,20-030,S64 Straight,straight,straight,,64,,,,,,,,,,included_in_app_native_csv
 1-6,20-040,20-040,S62 Straight,straight,straight,,62,,,,,,,,,,included_in_app_native_csv
 1-6,20-041,20-041,S62 Feeder,straight,straight,,62,,,,,,,,,,included_in_app_native_csv
-2,WS62 PC,20-042,Concrete tie straight 62mm,straight,straight,,62,,,,,,,,,PDF page 2,catalog_only
-2,WS62FPC,20-043,Concrete tie feeder straight 62mm,straight,straight,,62,,,,,,,,,PDF page 2,catalog_only
+2,WS62 PC,20-042,Concrete tie straight 62mm,straight,straight,Concrete Tie,62,,,,,,,,,PDF page 2,catalog_only
+2,WS62FPC,20-043,Concrete tie feeder straight 62mm,straight,straight,Concrete Tie,62,,,,,,,,,PDF page 2,catalog_only
 2,WS62S,20-044,Wood tie double-track straight 62mm,straight,straight,Double,62,,,,,,,,,PDF page 2,catalog_only
 1-6,20-046,20-046,Bumper Type A,bumper,straight,,95,,,,,,true,,,Long bumper with concrete stop.,included_in_app_native_csv
 1-6,20-047,20-047,Bumper Type B,bumper,straight,,95,,,,,,true,,,Long bumper with rock filled wood stop.,included_in_app_native_csv
@@ -45,15 +45,15 @@ sourcePage,symbol,sku,englishName,category,appKind,secondaryKinds,lengthMm,radiu
 1-6,20-172,20-172,R183-45 Compact Curve,curve,curve,,,183,,45,,,,,,Compact 183mm radius curve,included_in_app_native_csv
 1-6,20-174,20-174,R150-45 Curve,curve,curve,,,150,,45,,,,,,,included_in_app_native_csv
 1-6,20-176,20-176,R117-45 Compact Curve,curve,curve,,,117,,45,,,,,,Compact 117mm radius curve,included_in_app_native_csv
-2,WR414/381-45PC,20-181,Concrete tie double curve R414/381 45°,curve,curve,Double,,414,381,45,,,,,,PDF page 2,catalog_only
-2,WR414/381-22.5PCAL,20-182,Concrete tie double curve R414/381 22.5° left,curve,curve,Double,,414,381,22.5,,,,,,PDF page 2,catalog_only
-2,WR414/381-22.5PCAR,20-182,Concrete tie double curve R414/381 22.5° right,curve,curve,Double,,414,381,22.5,,,,,,PDF page 2,catalog_only
-2,WR315/282-45PC,20-183,Concrete tie double curve R315/282 45°,curve,curve,Double,,315,282,45,,,,,,PDF page 2,catalog_only
-2,WR315/282-22.5PCAL,20-184,Concrete tie double curve R315/282 22.5° left,curve,curve,Double,,315,282,22.5,,,,,,PDF page 2,catalog_only
-2,WR315/282-22.5PCAR,20-184,Concrete tie double curve R315/282 22.5° right,curve,curve,Double,,315,282,22.5,,,,,,PDF page 2,catalog_only
-2,WR480/447-45PC,20-185,Concrete tie double curve R480/447 45°,curve,curve,Double,,480,447,45,,,,,,PDF page 2,catalog_only
-2,WR480/447-22.5PCAL,20-186,Concrete tie double curve R480/447 22.5° left,curve,curve,Double,,480,447,22.5,,,,,,PDF page 2,catalog_only
-2,WR480/447-22.5PCAR,20-186,Concrete tie double curve R480/447 22.5° right,curve,curve,Double,,480,447,22.5,,,,,,PDF page 2,catalog_only
+2,WR414/381-45PC,20-181,Concrete tie double curve R414/381 45°,curve,curve,Double|Concrete Tie,,414,381,45,,,,,,PDF page 2,catalog_only
+2,WR414/381-22.5PCAL,20-182,Concrete tie double curve R414/381 22.5° left,curve,curve,Double|Concrete Tie,,414,381,22.5,,,,,,PDF page 2,catalog_only
+2,WR414/381-22.5PCAR,20-182,Concrete tie double curve R414/381 22.5° right,curve,curve,Double|Concrete Tie,,414,381,22.5,,,,,,PDF page 2,catalog_only
+2,WR315/282-45PC,20-183,Concrete tie double curve R315/282 45°,curve,curve,Double|Concrete Tie,,315,282,45,,,,,,PDF page 2,catalog_only
+2,WR315/282-22.5PCAL,20-184,Concrete tie double curve R315/282 22.5° left,curve,curve,Double|Concrete Tie,,315,282,22.5,,,,,,PDF page 2,catalog_only
+2,WR315/282-22.5PCAR,20-184,Concrete tie double curve R315/282 22.5° right,curve,curve,Double|Concrete Tie,,315,282,22.5,,,,,,PDF page 2,catalog_only
+2,WR480/447-45PC,20-185,Concrete tie double curve R480/447 45°,curve,curve,Double|Concrete Tie,,480,447,45,,,,,,PDF page 2,catalog_only
+2,WR480/447-22.5PCAL,20-186,Concrete tie double curve R480/447 22.5° left,curve,curve,Double|Concrete Tie,,480,447,22.5,,,,,,PDF page 2,catalog_only
+2,WR480/447-22.5PCAR,20-186,Concrete tie double curve R480/447 22.5° right,curve,curve,Double|Concrete Tie,,480,447,22.5,,,,,,PDF page 2,catalog_only
 1-6,20-202,20-202,#6 Left Turnout,turnout,turnout,,186,718,,15,,,,,,,included_in_app_native_csv
 1-6,20-203,20-203,#6 Right Turnout,turnout,turnout,,186,718,,15,,,,,,,included_in_app_native_csv
 1-6,20-210,20-210,Double Crossover,crossing,crossing,Double,310,,,,,,,,,Four main connection points on 33mm track centers,included_in_app_native_csv

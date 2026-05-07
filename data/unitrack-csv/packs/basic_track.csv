@@ -1,6 +1,6 @@
 id,sku,name,kind,secondaryKinds,length,minLength,maxLength,radius,radius2,angle,diverging,trackCenters,color,bridgeStyle,isTerminal,width,depth,buildingStyle,shapeType,shapeWidth,shapeHeight,shapeSide,shapeDiameter,notes
 s248,20-000,S248 Straight,straight,,248,,,,,,,,,,,,,,,,,,,
-concrete-s248,20-875,Concrete Tie S248 Straight,straight,,248,,,,,,,,,,,,,,,,,,,Concrete-tie straight track 248mm
+concrete-s248,20-875,Concrete Tie S248 Straight,straight,Concrete Tie,248,,,,,,,,,,,,,,,,,,,Concrete-tie straight track 248mm
 s186,20-010,S186 Straight,straight,,186,,,,,,,,,,,,,,,,,,,
 s124,20-020,S124 Straight,straight,,124,,,,,,,,,,,,,,,,,,,
 s64,20-030,S64 Straight,straight,,64,,,,,,,,,,,,,,,,,,,

@@ -1,25 +1,25 @@
 id,sku,name,kind,secondaryKinds,length,minLength,maxLength,radius,radius2,angle,diverging,trackCenters,color,bridgeStyle,isTerminal,width,depth,buildingStyle,shapeType,shapeWidth,shapeHeight,shapeSide,shapeDiameter,notes
-double-concrete-s248,20-004,Concrete Tie Double Track 248mm,straight,Double,248,,,,,,,33,,,,,,,,,,,,Concrete-tie double-track straight section on 33mm centers
+double-concrete-s248,20-004,Concrete Tie Double Track 248mm,straight,Double|Concrete Tie,248,,,,,,,33,,,,,,,,,,,,Concrete-tie double-track straight section on 33mm centers
 double-concrete-slab-s248,20-006,Concrete Slab Double Track 248mm,straight,Double|Concrete Slab,248,,,,,,,33,,,,,,,,,,,,Concrete slab double-track straight section on 33mm centers
-double-concrete-s186,20-012,Concrete Tie Double Track 186mm,straight,Double,186,,,,,,,33,,,,,,,,,,,,Concrete-tie double-track straight section on 33mm centers
+double-concrete-s186,20-012,Concrete Tie Double Track 186mm,straight,Double|Concrete Tie,186,,,,,,,33,,,,,,,,,,,,Concrete-tie double-track straight section on 33mm centers
 double-concrete-slab-s186,20-014,Concrete Slab Double Track 186mm,straight,Double|Concrete Slab,186,,,,,,,33,,,,,,,,,,,,Concrete slab double-track straight section on 33mm centers
-double-concrete-s124,20-023,Concrete Tie Double Track 124mm,straight,Double,124,,,,,,,33,,,,,,,,,,,,Concrete-tie double-track straight section on 33mm centers
+double-concrete-s124,20-023,Concrete Tie Double Track 124mm,straight,Double|Concrete Tie,124,,,,,,,33,,,,,,,,,,,,Concrete-tie double-track straight section on 33mm centers
 double-concrete-slab-s124,20-025,Concrete Slab Double Track 124mm,straight,Double|Concrete Slab,124,,,,,,,33,,,,,,,,,,,,Concrete slab double-track straight section on 33mm centers
-double-concrete-s62,20-042,Concrete Tie Double Track 62mm,straight,Double,62,,,,,,,33,,,,,,,,,,,,Concrete-tie double-track straight section on 33mm centers
-double-concrete-s62f,20-043,Concrete Tie Double Track Feeder 62mm,straight,Double,62,,,,,,,33,,,,,,,,,,,,Concrete-tie double-track feeder straight section on 33mm centers
+double-concrete-s62,20-042,Concrete Tie Double Track 62mm,straight,Double|Concrete Tie,62,,,,,,,33,,,,,,,,,,,,Concrete-tie double-track straight section on 33mm centers
+double-concrete-s62f,20-043,Concrete Tie Double Track Feeder 62mm,straight,Double|Concrete Tie,62,,,,,,,33,,,,,,,,,,,,Concrete-tie double-track feeder straight section on 33mm centers
 double-concrete-slab-s62,20-044,Concrete Slab Double Track 62mm,straight,Double|Concrete Slab,62,,,,,,,33,,,,,,,,,,,,Concrete slab double-track straight section on 33mm centers
 double-concrete-slab-s62f,20-049,Concrete Slab Double Track Feeder 62mm,straight,Double|Concrete Slab,62,,,,,,,33,,,,,,,,,,,,Concrete slab double-track feeder straight section on 33mm centers
-double-widening-left-310,20-051,Concrete Tie Double Track Widening Left 310mm,straight,Double,310,,,,,,left,33,,,,,,,,,,,,Concrete-tie double-track left-hand widening section 310mm
-double-widening-right-310,20-052,Concrete Tie Double Track Widening Right 310mm,straight,Double,310,,,,,,right,33,,,,,,,,,,,,Concrete-tie double-track right-hand widening section 310mm
-double-concrete-r414-381-45,20-181,Concrete Tie Double Track Curve R414/381-45,curve,Double,,,,414,381,45,,,,,,,,,,,,,,Concrete-tie double-track 45° curve with 414mm/381mm radii
-double-concrete-r414-381-22.5-left,20-182L,Concrete Tie Double Track Curve R414/381-22.5 Left,curve,Double,,,,414,381,22.5,left,,,,,,,,,,,,,Right-side nodes only connect with 20-181 20-183 or 20-185
-double-concrete-r414-381-22.5-right,20-182R,Concrete Tie Double Track Curve R414/381-22.5 Right,curve,Double,,,,414,381,22.5,right,,,,,,,,,,,,,Left-side nodes only connect with 20-181 20-183 or 20-185
-double-concrete-r315-282-45,20-183,Concrete Tie Double Track Curve R315/282-45,curve,Double,,,,315,282,45,,,,,,,,,,,,,,Concrete-tie double-track 45° curve with 315mm/282mm radii
-double-concrete-r315-282-22.5-left,20-184L,Concrete Tie Double Track Curve R315/282-22.5 Left,curve,Double,,,,315,282,22.5,left,,,,,,,,,,,,,Right-side nodes only connect with 20-181 20-183 or 20-185
-double-concrete-r315-282-22.5-right,20-184R,Concrete Tie Double Track Curve R315/282-22.5 Right,curve,Double,,,,315,282,22.5,right,,,,,,,,,,,,,Left-side nodes only connect with 20-181 20-183 or 20-185
-double-concrete-r480-447-45,20-185,Concrete Tie Double Track Curve R480/447-45,curve,Double,,,,480,447,45,,,,,,,,,,,,,,Concrete-tie double-track 45° curve with 480mm/447mm radii
-double-concrete-r480-447-22.5-left,20-186L,Concrete Tie Double Track Curve R480/447-22.5 Left,curve,Double,,,,480,447,22.5,left,,,,,,,,,,,,,Right-side nodes only connect with 20-181 20-183 or 20-185
-double-concrete-r480-447-22.5-right,20-186R,Concrete Tie Double Track Curve R480/447-22.5 Right,curve,Double,,,,480,447,22.5,right,,,,,,,,,,,,,Left-side nodes only connect with 20-181 20-183 or 20-185
+double-widening-left-310,20-051,Concrete Tie Double Track Widening Left 310mm,straight,Double|Concrete Tie,310,,,,,,left,33,,,,,,,,,,,,Concrete-tie double-track left-hand widening section 310mm
+double-widening-right-310,20-052,Concrete Tie Double Track Widening Right 310mm,straight,Double|Concrete Tie,310,,,,,,right,33,,,,,,,,,,,,Concrete-tie double-track right-hand widening section 310mm
+double-concrete-r414-381-45,20-181,Concrete Tie Double Track Curve R414/381-45,curve,Double|Concrete Tie,,,,414,381,45,,,,,,,,,,,,,,Concrete-tie double-track 45° curve with 414mm/381mm radii
+double-concrete-r414-381-22.5-left,20-182L,Concrete Tie Double Track Curve R414/381-22.5 Left,curve,Double|Concrete Tie,,,,414,381,22.5,left,,,,,,,,,,,,,Right-side nodes only connect with 20-181 20-183 or 20-185
+double-concrete-r414-381-22.5-right,20-182R,Concrete Tie Double Track Curve R414/381-22.5 Right,curve,Double|Concrete Tie,,,,414,381,22.5,right,,,,,,,,,,,,,Left-side nodes only connect with 20-181 20-183 or 20-185
+double-concrete-r315-282-45,20-183,Concrete Tie Double Track Curve R315/282-45,curve,Double|Concrete Tie,,,,315,282,45,,,,,,,,,,,,,,Concrete-tie double-track 45° curve with 315mm/282mm radii
+double-concrete-r315-282-22.5-left,20-184L,Concrete Tie Double Track Curve R315/282-22.5 Left,curve,Double|Concrete Tie,,,,315,282,22.5,left,,,,,,,,,,,,,Right-side nodes only connect with 20-181 20-183 or 20-185
+double-concrete-r315-282-22.5-right,20-184R,Concrete Tie Double Track Curve R315/282-22.5 Right,curve,Double|Concrete Tie,,,,315,282,22.5,right,,,,,,,,,,,,,Left-side nodes only connect with 20-181 20-183 or 20-185
+double-concrete-r480-447-45,20-185,Concrete Tie Double Track Curve R480/447-45,curve,Double|Concrete Tie,,,,480,447,45,,,,,,,,,,,,,,Concrete-tie double-track 45° curve with 480mm/447mm radii
+double-concrete-r480-447-22.5-left,20-186L,Concrete Tie Double Track Curve R480/447-22.5 Left,curve,Double|Concrete Tie,,,,480,447,22.5,left,,,,,,,,,,,,,Right-side nodes only connect with 20-181 20-183 or 20-185
+double-concrete-r480-447-22.5-right,20-186R,Concrete Tie Double Track Curve R480/447-22.5 Right,curve,Double|Concrete Tie,,,,480,447,22.5,right,,,,,,,,,,,,,Left-side nodes only connect with 20-181 20-183 or 20-185
 double-concrete-slab-r414-381-45,20-187,Concrete Slab Double Track Curve R414/381-45,curve,Double|Concrete Slab,,,,414,381,45,,,,,,,,,,,,,,Concrete slab double-track 45° curve with 414mm/381mm radii; special nodes compatible with the concrete double-curve family
 double-concrete-slab-r414-381-22.5-left,20-188L,Concrete Slab Double Track Curve R414/381-22.5 Left,curve,Double|Concrete Slab,,,,414,381,22.5,left,,,,,,,,,,,,,Right-side nodes only connect with the concrete double-curve family
 double-concrete-slab-r414-381-22.5-right,20-188R,Concrete Slab Double Track Curve R414/381-22.5 Right,curve,Double|Concrete Slab,,,,414,381,22.5,right,,,,,,,,,,,,,Left-side nodes only connect with the concrete double-curve family
