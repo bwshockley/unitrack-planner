@@ -613,7 +613,14 @@ export function TrackShape({
     </>;
   }
 
-  function turnoutBranchGeometry(ex: number, ey: number, len: number) {
+  function turnoutBranchGeometry(ex: number, ey: number, len: number, arcRadius?: number, arcAngle?: number) {
+    if (arcRadius && arcAngle) {
+      return {
+        center: turnoutArcPath(arcRadius, arcAngle, arcRadius),
+        plus: turnoutArcPath(arcRadius, arcAngle, arcRadius + railOffset),
+        minus: turnoutArcPath(arcRadius, arcAngle, Math.max(1, arcRadius - railOffset)),
+      };
+    }
     const cx = len * 0.45;
     const cy = ey * 0.15;
     const chordLen = Math.hypot(ex, ey) || 1;
@@ -638,10 +645,14 @@ export function TrackShape({
     </g>;
   }
 
-  function standardTurnoutShape(ex: number, ey: number, len: number, key: string, drawStraight = true) {
+  function standardTurnoutShape(ex: number, ey: number, len: number, key: string, drawStraight = true, branchCurve?: { radius: number; angle: number }) {
     const halfBed = roadbedWidth / 2;
-    const branch = turnoutBranchGeometry(ex, ey, len);
+    const branch = turnoutBranchGeometry(ex, ey, len, branchCurve?.radius, branchCurve?.angle);
     const branchPoint = (t: number) => {
+      if (branchCurve) {
+        const p = turnoutArcPoint(branchCurve.radius, branchCurve.radius, branchCurve.angle, t);
+        return { x: p.x, y: p.y, angle: radToDeg(Math.atan2(p.ny, p.nx)) };
+      }
       const cx = len * 0.45;
       const cy = ey * 0.15;
       const omt = 1 - t;
@@ -707,7 +718,12 @@ export function TrackShape({
           />
         ))}
         {drawStraight && straightRailsOnly(0, 0, len, 0, `${key}-straight`)}
-        {turnoutBranchRailsOnly(ex, ey, len, `${key}-branch`)}
+        {(branchCurve)
+          ? <g key={`${key}-branch-rails-only`}>
+            <path d={branch.plus} fill="none" stroke={railStroke} strokeWidth={railWidth} strokeLinecap={lineCap} />
+            <path d={branch.minus} fill="none" stroke={railStroke} strokeWidth={railWidth} strokeLinecap={lineCap} />
+          </g>
+          : turnoutBranchRailsOnly(ex, ey, len, `${key}-branch`)}
         <path d={`M ${mm(len * 0.08)} ${mm(-railOffset)} C ${mm(len * 0.24)} ${mm(-railOffset)} ${mm(len * 0.42)} ${mm(frogY - 2.5)} ${mm(len * 0.58)} ${mm(frogY)}`} fill="none" stroke={railStroke} strokeWidth="1.65" strokeLinecap={lineCap} />
         <path d={`M ${mm(len * 0.12)} ${mm(railOffset)} C ${mm(len * 0.3)} ${mm(railOffset)} ${mm(len * 0.44)} ${mm(frogY + 2.5)} ${mm(len * 0.6)} ${mm(frogY + 1.5)}`} fill="none" stroke={railStroke} strokeWidth="1.65" strokeLinecap={lineCap} />
         <rect x={mm(frogX - 5)} y={mm(frogY - 4)} width={mm(10)} height={mm(8)} fill={frogFill} stroke="var(--standard-fastener)" strokeWidth="0.9" />
@@ -756,6 +772,19 @@ export function TrackShape({
     const startY = centerRadius - safePathRadius;
     const endX = safePathRadius * Math.sin(degToRad(angle));
     const endY = centerRadius - safePathRadius * Math.cos(degToRad(angle));
+    const large = Math.abs(angle) > 180 ? 1 : 0;
+    const sweep = angle >= 0 ? 1 : 0;
+    return `M ${mm(startX)} ${mm(startY)} A ${mm(safePathRadius)} ${mm(safePathRadius)} 0 ${large} ${sweep} ${mm(endX)} ${mm(endY)}`;
+  }
+
+  function turnoutArcPath(centerRadius: number, angle: number, pathRadius = centerRadius) {
+    const safePathRadius = Math.max(1, pathRadius);
+    const side = angle < 0 ? -1 : 1;
+    const theta = degToRad(Math.abs(angle));
+    const startX = 0;
+    const startY = side * centerRadius - side * safePathRadius;
+    const endX = safePathRadius * Math.sin(theta);
+    const endY = side * centerRadius - side * safePathRadius * Math.cos(theta);
     const large = Math.abs(angle) > 180 ? 1 : 0;
     const sweep = angle >= 0 ? 1 : 0;
     return `M ${mm(startX)} ${mm(startY)} A ${mm(safePathRadius)} ${mm(safePathRadius)} 0 ${large} ${sweep} ${mm(endX)} ${mm(endY)}`;
@@ -986,6 +1015,17 @@ export function TrackShape({
       y: centerRadius - radius * Math.cos(theta),
       nx: Math.sin(theta),
       ny: -Math.cos(theta),
+    };
+  }
+
+  function turnoutArcPoint(centerRadius: number, radius: number, angle: number, t: number) {
+    const side = angle < 0 ? -1 : 1;
+    const theta = degToRad(Math.abs(angle) * t);
+    return {
+      x: radius * Math.sin(theta),
+      y: side * centerRadius - side * radius * Math.cos(theta),
+      nx: Math.sin(theta),
+      ny: -side * Math.cos(theta),
     };
   }
 
@@ -2075,8 +2115,9 @@ export function TrackShape({
       const sign = part.diverging === 'left' ? -1 : 1;
       const ex = r * Math.sin(degToRad(a));
       const ey = sign * r * (1 - Math.cos(degToRad(a)));
+      const branchCurve = ['20-240', '20-241'].includes(part.sku) ? { radius: r, angle: sign * a } : undefined;
       shape = !useLowDetail && ['20-202', '20-203', '20-220', '20-221', '20-240', '20-241'].includes(part.sku)
-        ? standardTurnoutShape(ex, ey, len, 'turnout-standard-detail')
+        ? standardTurnoutShape(ex, ey, len, 'turnout-standard-detail', true, branchCurve)
         : <>
         {(layer === 'roadbed' || layer === 'both') && <>
           {straightRoadbedOnly(0, 0, len, 0, 'turnout-straight')}

@@ -66,6 +66,8 @@ export default function Page() {
   const resizeDrag = useRef<{ uid: string; handle: 'start' | 'end'; startLength: number; startX: number; startY: number; startItemX: number; startItemY: number; rotation: number; flip?: boolean; min: number; max: number } | null>(null);
   const boxDrag = useRef<{ x: number; y: number } | null>(null);
   const canvasFrameRef = useRef<HTMLDivElement | null>(null);
+  const rightPanelScrollRef = useRef<HTMLDivElement | null>(null);
+  const selectedSectionRef = useRef<HTMLHeadingElement | null>(null);
   const paletteFileRef = useRef<HTMLInputElement | null>(null);
   const stockFileRef = useRef<HTMLInputElement | null>(null);
   const copiedItemsRef = useRef<PlacedTrack[]>([]);
@@ -231,6 +233,20 @@ export default function Page() {
   const isDark = theme === 'dark';
   const selectedUid = selectedUids[selectedUids.length - 1] ?? null;
   const selectedItem = items.find(i => i.uid === selectedUid);
+
+  useEffect(() => {
+    if (selectedUids.length === 0) return;
+    const scroller = rightPanelScrollRef.current;
+    const selectedSection = selectedSectionRef.current;
+    if (!scroller || !selectedSection) return;
+    requestAnimationFrame(() => {
+      scroller.scrollTo({
+        top: Math.max(0, selectedSection.offsetTop - scroller.offsetTop - 8),
+        behavior: 'smooth',
+      });
+    });
+  }, [selectedUid, selectedUids.length]);
+
   const inventory = useMemo(() => items.reduce<Record<string, number>>((a, i) => { a[i.partId] = (a[i.partId] ?? 0) + 1; return a; }, {}), [items]);
   const stockComparisonRows = useMemo<StockRow[]>(() => {
     const bySku = new Map<string, StockRow>();
@@ -772,6 +788,85 @@ export default function Page() {
     return clamp((projection - min) / span, 0, 1);
   }
 
+  function selectedTrackItemsFromSelection() {
+    return selectedUids
+      .map(id => items.find(item => item.uid === id))
+      .filter((item): item is PlacedTrack => {
+        if (!item) return false;
+        const part = partMap.get(item.partId);
+        return !!part && part.kind !== 'building' && part.kind !== 'shape';
+      });
+  }
+
+  function nearestConnectorDistance(connector: Pose, otherItem: PlacedTrack) {
+    const otherPart = partMap.get(otherItem.partId);
+    if (!otherPart) return Number.POSITIVE_INFINITY;
+    const otherPorts = connectors(otherPart, otherItem);
+    if (otherPorts.length === 0) return Number.POSITIVE_INFINITY;
+    return Math.min(...otherPorts.map(port => Math.hypot(connector.x - port.x, connector.y - port.y)));
+  }
+
+  function nodeProgressWithinSelection(trackItems: PlacedTrack[], item: PlacedTrack, connector: Pose) {
+    const part = partMap.get(item.partId);
+    if (!part) return 0;
+    const index = trackItems.findIndex(trackItem => trackItem.uid === item.uid);
+    const prevItem = index > 0 ? trackItems[index - 1] : null;
+    const nextItem = index >= 0 && index < trackItems.length - 1 ? trackItems[index + 1] : null;
+    const ports = connectors(part, item);
+
+    if (prevItem && nextItem) {
+      const prevDistance = nearestConnectorDistance(connector, prevItem);
+      const nextDistance = nearestConnectorDistance(connector, nextItem);
+      const totalDistance = prevDistance + nextDistance;
+      if (Number.isFinite(totalDistance) && totalDistance > 0.001) {
+        return clamp(prevDistance / totalDistance, 0, 1);
+      }
+    }
+
+    if (prevItem || nextItem) {
+      const neighbor = prevItem ?? nextItem!;
+      const distances = ports.map(port => nearestConnectorDistance(port, neighbor)).filter(Number.isFinite);
+      const distance = nearestConnectorDistance(connector, neighbor);
+      if (!distances.length || !Number.isFinite(distance)) return nodeProgressWithinItem(part, item, connector);
+      const min = Math.min(...distances);
+      const max = Math.max(...distances);
+      const span = Math.max(0.001, max - min);
+      const normalizedDistance = clamp((distance - min) / span, 0, 1);
+      return prevItem ? normalizedDistance : 1 - normalizedDistance;
+    }
+
+    return nodeProgressWithinItem(part, item, connector);
+  }
+
+  function selectedGroupEndpointMarkers() {
+    const trackItems = selectedTrackItemsFromSelection();
+    if (trackItems.length < 2) return [];
+    const endpointFor = (item: PlacedTrack, label: 'A' | 'B') => {
+      const part = partMap.get(item.partId);
+      if (!part) return null;
+      const ports = connectors(part, item);
+      if (ports.length === 0) return null;
+      const ranked = ports.map((connector, index) => ({
+        connector,
+        index,
+        key: connector.key ?? String(index),
+        progress: nodeProgressWithinSelection(trackItems, item, connector),
+      })).sort((a, b) => a.progress - b.progress);
+      const marker = label === 'A' ? ranked[0] : ranked[ranked.length - 1];
+      return marker ? { ...marker, label } : null;
+    };
+    return ([
+      endpointFor(trackItems[0], 'A'),
+      endpointFor(trackItems[trackItems.length - 1], 'B'),
+    ].filter(Boolean) as Array<{
+      connector: Pose;
+      index: number;
+      key: string;
+      progress: number;
+      label: 'A' | 'B';
+    }>);
+  }
+
   function applyLinearHeightToSelectedChain() {
     if (selectedUids.length < 2) {
       setMessage('Select a chain of at least two track parts before applying a height grade.');
@@ -783,13 +878,7 @@ export default function Page() {
       setMessage('Enter valid beginning and ending heights in millimeters.');
       return;
     }
-    const chainItems = selectedUids
-      .map(id => items.find(item => item.uid === id))
-      .filter((item): item is PlacedTrack => !!item && !isItemLocked(item));
-    const trackItems = chainItems.filter(item => {
-      const part = partMap.get(item.partId);
-      return part && part.kind !== 'building' && part.kind !== 'shape';
-    });
+    const trackItems = selectedTrackItemsFromSelection().filter(item => !isItemLocked(item));
     if (trackItems.length < 2) {
       setMessage('The selected chain needs at least two editable track parts.');
       return;
@@ -811,7 +900,7 @@ export default function Page() {
       const nodeHeights = { ...(item.nodeHeights ?? {}) };
       connectors(part, item).forEach((connector, index) => {
         const key = connector.key ?? String(index);
-        const progress = clamp((base + nodeProgressWithinItem(part, item, connector) * length) / total, 0, 1);
+        const progress = clamp((base + nodeProgressWithinSelection(trackItems, item, connector) * length) / total, 0, 1);
         nodeHeights[key] = Number((start + (end - start) * progress).toFixed(2));
       });
       return { ...item, nodeHeights };
@@ -1726,13 +1815,36 @@ export default function Page() {
                 key={`${item.uid}-markers`}
                 part={p}
                 item={item}
-                selected={isSelected}
+                selected={isSelected && selectedUids.length === 1}
                 layer="markers"
                 connectionStates={connectionStatesByUid.get(item.uid)}
-                selectedNodeKey={selectedNode?.uid === item.uid ? selectedNode.key : null}
+                selectedNodeKey={selectedUids.length === 1 && selectedNode?.uid === item.uid ? selectedNode.key : null}
                 onNodeClick={selectNodeForElevation}
               />;
             }))}
+            {selectedUids.length > 1 && <g pointerEvents="none">
+              {selectedGroupEndpointMarkers().map(marker => (
+                <g key={`group-node-${marker.label}-${marker.key}`} transform={`translate(${mm(marker.connector.x)} ${mm(marker.connector.y)})`}>
+                  <circle
+                    r="8"
+                    fill={marker.label === 'A' ? 'var(--node-a-highlight)' : 'var(--node-b-highlight)'}
+                    stroke="var(--node-active-ring)"
+                    strokeWidth="2.5"
+                  />
+                  <text
+                    x="0"
+                    y={mm(-12)}
+                    fill="var(--node-label-fill)"
+                    stroke="var(--node-label-stroke)"
+                    strokeWidth="2.4"
+                    paintOrder="stroke"
+                    fontSize="12"
+                    fontWeight="700"
+                    textAnchor="middle"
+                  >{marker.label}</text>
+                </g>
+              ))}
+            </g>}
             {expansionResizeHandles()}
           </svg>
           {heightProfileView()}
@@ -1740,7 +1852,7 @@ export default function Page() {
       </section>
 
       <aside className="panel flex min-h-0 flex-col overflow-hidden rounded-2xl border p-3">
-        <div className="shrink-0">
+        <div ref={rightPanelScrollRef} className="min-h-0 flex-1 overflow-y-auto pr-1">
           <h2 className="mb-2 text-base font-semibold">Layout Stats</h2>
           <div className="subpanel space-y-2 rounded-xl p-3 text-sm">
             <div className="flex justify-between"><span>Pieces</span><b>{items.length}</b></div>
@@ -1801,7 +1913,7 @@ export default function Page() {
             {selectedUids.length > 0 && <label className="muted block pt-1">Move selected to layer<select onChange={e => e.target.value && assignSelectedToLayer(e.target.value)} value="" className="field mt-1 w-full rounded-lg px-2 py-1"><option value="">Choose layer…</option>{layers.filter(layer => !layer.locked).map(layer => <option key={layer.id} value={layer.id}>{layer.name}</option>)}</select></label>}
           </div>
 
-          <h2 className="mb-2 mt-4 text-base font-semibold">Selected</h2>
+          <h2 ref={selectedSectionRef} className="mb-2 mt-4 text-base font-semibold">Selected</h2>
           <div className="subpanel rounded-xl p-3 text-sm muted">
             {selectedUids.length > 1 ? <>
               <div className="strong font-semibold">{selectedUids.length} pieces selected</div>
@@ -1936,7 +2048,7 @@ export default function Page() {
           {Object.keys(ownedStock).length} SKU owned
           <input ref={stockFileRef} type="file" accept=".csv,text/csv" className="hidden" onChange={e => { const file = e.currentTarget.files?.[0]; if (file) importStockCsv(file); e.currentTarget.value = ''; }} />
         </div>
-        <div className="subpanel min-h-0 flex-1 overflow-auto rounded-xl p-3 text-sm">
+        <div className="subpanel h-64 shrink-0 overflow-auto rounded-xl p-3 text-sm">
           {stockComparisonRows.length === 0 ? <p className="muted">Place track to generate a parts list. Import stock CSV columns as SKU, Quantity to compare owned inventory.</p> : <div className="space-y-2">
             <div className="muted grid grid-cols-[minmax(0,1fr)_44px_44px_44px] gap-2 text-[11px] font-semibold uppercase tracking-wide">
               <span>Part</span><span className="text-right">Need</span><span className="text-right">Own</span><span className="text-right">Buy</span>

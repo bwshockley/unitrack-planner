@@ -136,7 +136,7 @@ export const UNITRACK_PARTS: TrackPart[] = [
   { id: 'single-crossover-right', sku: '20-231', name: 'Double Track Single Crossover Right', kind: 'crossing', secondaryKinds: ['Double'], length: 248, trackCenters: 33, diverging: 'right', notes: '#4 single crossover, right, 248mm overall length' },
   { id: 'crossing-15-left', sku: '20-300', name: '15° Crossing Left', kind: 'crossing', length: 186, angle: 15, diverging: 'left', notes: 'Single-track 15° left crossing, 186mm' },
   { id: 'crossing-15-right', sku: '20-301', name: '15° Crossing Right', kind: 'crossing', length: 186, angle: 15, diverging: 'right', notes: 'Single-track 15° right crossing, 186mm' },
-  { id: 'crossing-90', sku: '20-320', name: '90° Crossing', kind: 'crossing', length: 124, angle: 90, notes: 'Single-track 90° crossing, 124mm' },
+  { id: 'crossing-90', sku: '20-320', name: '90° Crossing', kind: 'crossing', length: 33, angle: 90, notes: 'Single-track 90° crossing, 33mm x 33mm' },
   { id: 'double-crossover', sku: '20-210', name: 'Double Crossover', kind: 'crossing', secondaryKinds: ['Double'], length: 310, trackCenters: 33, notes: 'Four main connection points on 33mm track centers' },
   { id: 'viaduct-s248', sku: '20-400', name: 'S248 Single Track Viaduct', kind: 'straight', secondaryKinds: ['Viaduct'], length: 248, color: '#8f9499', notes: 'Single-track straight viaduct, 248mm' },
   { id: 'double-viaduct-s248', sku: '20-401', name: 'Concrete Slab Double Track Straight Viaduct 248mm', kind: 'straight', secondaryKinds: ['Double', 'Viaduct', 'Concrete Slab'], length: 248, trackCenters: 33, color: '#8f9499', notes: 'Concrete slab double-track straight viaduct section on 33mm centers with edge walls' },
