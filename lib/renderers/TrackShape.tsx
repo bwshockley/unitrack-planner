@@ -539,12 +539,14 @@ export function TrackShape({
           const spanBottom = inCrossover ? bedBottom - 2 : upperY + 10.7;
           const lowerTop = lowerY - 10.7;
           const lowerBottom = lowerY + 10.7;
-          return inCrossover
-            ? verticalTie(x, spanTop, spanBottom, `double-crossover-full-tie-${idx}`)
-            : <>
-              {verticalTie(x, upperY - 10.7, upperY + 10.7, `double-crossover-upper-tie-${idx}`)}
-              {verticalTie(x, lowerTop, lowerBottom, `double-crossover-lower-tie-${idx}`)}
-            </>;
+          return <g key={`double-crossover-tie-${idx}`}>
+            {inCrossover
+              ? verticalTie(x, spanTop, spanBottom, `double-crossover-full-tie-${idx}`)
+              : <>
+                {verticalTie(x, upperY - 10.7, upperY + 10.7, `double-crossover-upper-tie-${idx}`)}
+                {verticalTie(x, lowerTop, lowerBottom, `double-crossover-lower-tie-${idx}`)}
+              </>}
+          </g>;
         })}
         <rect x={mm(length * 0.43)} y={mm(-5.2)} width={mm(length * 0.14)} height={mm(10.4)} fill={frogFill} stroke="var(--standard-fastener)" strokeWidth="0.85" opacity="0.78" />
         <path d={`M ${mm(length * 0.38)} ${mm(-halfCenter + 3)} L ${mm(length * 0.50)} ${mm(halfCenter - 3)} L ${mm(length * 0.62)} ${mm(-halfCenter + 3)}`} fill="none" stroke="var(--standard-fastener)" strokeWidth="1.6" strokeLinecap="round" opacity="0.7" />

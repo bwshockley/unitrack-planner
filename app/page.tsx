@@ -11,6 +11,8 @@ const BOARD_W = 1800;
 const BOARD_H = 1000;
 const GRID = 33;
 const SNAP_DISTANCE_MM = 24;
+const TRAIN_LOOP_CLOSE_DISTANCE_MM = 10;
+const TRAIN_CAR_COUNT = 4;
 const AUTOSAVE_LAYOUT_KEY = 'unitrack-planner-layout-autosave';
 type Theme = 'dark' | 'light';
 type RenderDetail = 'high' | 'low';
@@ -21,6 +23,8 @@ type RunSuggestion = { label: string; gap: number; error: number; parts: { partI
 type LayoutLayer = { id: string; name: string; visible: boolean; locked: boolean };
 type LayoutSnapshot = { items: PlacedTrack[]; layers: LayoutLayer[]; activeLayerId: string; selectedUids: string[] };
 type StockRow = { sku: string; name: string; required: number; owned: number; purchase: number; kind: string };
+type TrainPathPoint = { x: number; y: number; distance: number };
+type TrainRoute = { points: TrainPathPoint[]; totalLength: number; isLoop: boolean };
 type DialogState =
   | { kind: 'save-layout'; fileName: string }
   | { kind: 'save-palette'; fileName: string }
@@ -62,6 +66,13 @@ export default function Page() {
   const [runSuggestions, setRunSuggestions] = useState<RunSuggestion[]>([]);
   const [dropPartId, setDropPartId] = useState<string | null>(null);
   const [layoutAutosaveReady, setLayoutAutosaveReady] = useState(false);
+  const [trainEnabled, setTrainEnabled] = useState(false);
+  const [trainDistance, setTrainDistance] = useState(0);
+  const [trainDirection, setTrainDirection] = useState<1 | -1>(1);
+  const [trainSpeed, setTrainSpeed] = useState(50);
+  const [trainStartUid, setTrainStartUid] = useState<string | null>(null);
+  const [trainRouteSeed, setTrainRouteSeed] = useState(0);
+  const [showTrainRouteDebug, setShowTrainRouteDebug] = useState(false);
   const drag = useRef<{ uids: string[]; startX: number; startY: number; origins: Record<string, { x: number; y: number }> } | null>(null);
   const resizeDrag = useRef<{ uid: string; handle: 'start' | 'end'; startLength: number; startX: number; startY: number; startItemX: number; startItemY: number; rotation: number; flip?: boolean; min: number; max: number } | null>(null);
   const boxDrag = useRef<{ x: number; y: number } | null>(null);
@@ -73,6 +84,8 @@ export default function Page() {
   const copiedItemsRef = useRef<PlacedTrack[]>([]);
   const historyPastRef = useRef<LayoutSnapshot[]>([]);
   const historyFutureRef = useRef<LayoutSnapshot[]>([]);
+  const trainFrameRef = useRef<number | null>(null);
+  const lastTrainFrameTimeRef = useRef<number | null>(null);
   const [historyTick, setHistoryTick] = useState(0);
 
   function makeSnapshot(): LayoutSnapshot {
@@ -233,6 +246,10 @@ export default function Page() {
   const isDark = theme === 'dark';
   const selectedUid = selectedUids[selectedUids.length - 1] ?? null;
   const selectedItem = items.find(i => i.uid === selectedUid);
+  const selectedPart = selectedItem && isItemVisible(selectedItem) ? partMap.get(selectedItem.partId) : null;
+  const selectedTrainStartUid = selectedItem && selectedPart && selectedPart.kind !== 'building' && selectedPart.kind !== 'shape' && !selectedPart.isTerminal
+    ? selectedItem.uid
+    : null;
 
   useEffect(() => {
     if (selectedUids.length === 0) return;
@@ -293,12 +310,7 @@ export default function Page() {
         const pa = allPorts[a];
         const pb = allPorts[b];
         if (pa.uid === pb.uid) continue;
-        if (!nodesCompatible(pa, pb)) continue;
-        const dist = Math.hypot(pa.x - pb.x, pa.y - pb.y);
-        const headingDelta = Math.abs(norm(pa.heading - pb.heading));
-        const oppositeDelta = Math.min(Math.abs(headingDelta - 180), Math.abs(headingDelta + 180));
-        const sameHeight = Math.abs((pa.height ?? 0) - (pb.height ?? 0)) <= 0.01;
-        if (dist <= 3 && oppositeDelta <= 12 && sameHeight) {
+        if (nodesConnected(pa, pb, true)) {
           const aStates = states.get(pa.uid);
           const bStates = states.get(pb.uid);
           if (aStates) aStates[pa.index] = true;
@@ -332,6 +344,16 @@ export default function Page() {
     return { x, y: item.flip ? -y : y };
   }
 
+  function itemLocalPointToWorld(point: { x: number; y: number }, item: Pick<PlacedTrack, 'x' | 'y' | 'rotation' | 'flip'>) {
+    const flip = item.flip ? -1 : 1;
+    const localY = point.y * flip;
+    const r = degToRad(item.rotation);
+    return {
+      x: item.x + point.x * Math.cos(r) - localY * Math.sin(r),
+      y: item.y + point.x * Math.sin(r) + localY * Math.cos(r),
+    };
+  }
+
   function rotatePoint(point: Pose, angleDeg: number) {
     const r = degToRad(angleDeg);
     return {
@@ -351,6 +373,15 @@ export default function Page() {
     if (a.compatibleTags && (!b.compatibilityTag || !a.compatibleTags.includes(b.compatibilityTag))) return false;
     if (b.compatibleTags && (!a.compatibilityTag || !b.compatibleTags.includes(a.compatibilityTag))) return false;
     return true;
+  }
+
+  function nodesConnected(a: Pose & { height?: number }, b: Pose & { height?: number }, checkHeight = false, distanceTolerance = 3) {
+    if (!nodesCompatible(a, b)) return false;
+    const dist = Math.hypot(a.x - b.x, a.y - b.y);
+    const headingDelta = Math.abs(norm(a.heading - b.heading));
+    const oppositeDelta = Math.min(Math.abs(headingDelta - 180), Math.abs(headingDelta + 180));
+    const sameHeight = !checkHeight || Math.abs((a.height ?? 0) - (b.height ?? 0)) <= 0.01;
+    return dist <= distanceTolerance && oppositeDelta <= 12 && sameHeight;
   }
 
   function withUniformNodeHeight(part: TrackPart, item: PlacedTrack, height: number): PlacedTrack {
@@ -1329,29 +1360,291 @@ export default function Page() {
     setMessage(picked.length ? `Selected ${picked.length} pieces.` : 'No editable visible pieces inside selection box.');
   }
 
-  function buildConnectivityGraph() {
+  function buildConnectivityGraph(distanceTolerance = 3) {
     const graph = new Map<string, Set<string>>();
     for (const item of visibleItems) graph.set(item.uid, new Set());
     const ports = visibleItems.flatMap(item => {
       const part = partMap.get(item.partId)!;
-      return connectors(part, item).map(c => ({ uid: item.uid, x: c.x, y: c.y, heading: c.heading, nodeKind: c.nodeKind, partSku: c.partSku, compatibilityTag: c.compatibilityTag, compatibleTags: c.compatibleTags }));
+      return connectors(part, item).map(c => ({ uid: item.uid, key: c.key, x: c.x, y: c.y, heading: c.heading, nodeKind: c.nodeKind, partSku: c.partSku, compatibilityTag: c.compatibilityTag, compatibleTags: c.compatibleTags }));
     });
     for (let a = 0; a < ports.length; a++) {
       for (let b = a + 1; b < ports.length; b++) {
         const pa = ports[a];
         const pb = ports[b];
         if (pa.uid === pb.uid) continue;
-        if (!nodesCompatible(pa, pb)) continue;
-        const dist = Math.hypot(pa.x - pb.x, pa.y - pb.y);
-        const headingDelta = Math.abs(norm(pa.heading - pb.heading));
-        const oppositeDelta = Math.min(Math.abs(headingDelta - 180), Math.abs(headingDelta + 180));
-        if (dist <= 3 && oppositeDelta <= 12) {
+        if (nodesConnected(pa, pb, false, distanceTolerance)) {
           graph.get(pa.uid)?.add(pb.uid);
           graph.get(pb.uid)?.add(pa.uid);
         }
       }
     }
     return graph;
+  }
+
+  function trainPolylineForItem(part: TrackPart, item: PlacedTrack) {
+    const local: { x: number; y: number }[] = [];
+    if (part.kind === 'straight') {
+      const len = partLength(part, item);
+      const centerY = isDoubleTrack(part) ? -(part.trackCenters ?? 33) / 2 : 0;
+      local.push({ x: 0, y: centerY }, { x: len, y: centerY });
+    } else if (part.kind === 'curve') {
+      const radius = part.radius ?? 0;
+      if (radius <= 0) return [];
+      const centerRadius = isDoubleTrack(part) && part.radius2 ? (radius + part.radius2) / 2 : radius;
+      const angle = part.angle ?? 0;
+      const steps = Math.max(8, Math.ceil(Math.abs(angle) / 5));
+      for (let idx = 0; idx <= steps; idx++) {
+        const theta = degToRad((angle * idx) / steps);
+        local.push({
+          x: radius * Math.sin(theta),
+          y: centerRadius - radius * Math.cos(theta),
+        });
+      }
+    } else if (part.kind === 'crossing') {
+      const len = part.length ?? 0;
+      const centerY = isDoubleTrack(part) ? -(part.trackCenters ?? 33) / 2 : 0;
+      local.push({ x: 0, y: centerY }, { x: len, y: centerY });
+    } else if (part.kind === 'turnout') {
+      local.push({ x: 0, y: 0 }, { x: part.length ?? 0, y: 0 });
+    }
+    return local.map(point => itemLocalPointToWorld(point, item));
+  }
+
+  function orientPolyline(points: { x: number; y: number }[], previous?: { x: number; y: number }) {
+    if (!previous || points.length < 2) return points;
+    const first = points[0];
+    const last = points[points.length - 1];
+    return Math.hypot(previous.x - last.x, previous.y - last.y) < Math.hypot(previous.x - first.x, previous.y - first.y)
+      ? [...points].reverse()
+      : points;
+  }
+
+  function nearestConnectorToItem(part: TrackPart, item: PlacedTrack, otherItem?: PlacedTrack) {
+    const ports = connectors(part, item);
+    if (!otherItem || ports.length === 0) return null;
+    const otherPart = partMap.get(otherItem.partId);
+    if (!otherPart) return null;
+    const otherPorts = connectors(otherPart, otherItem);
+    if (otherPorts.length === 0) return null;
+    return ports
+      .map(port => ({ port, distance: Math.min(...otherPorts.map(otherPort => Math.hypot(port.x - otherPort.x, port.y - otherPort.y))) }))
+      .sort((a, b) => a.distance - b.distance)[0]?.port ?? null;
+  }
+
+  function trainPolylineThroughItem(part: TrackPart, item: PlacedTrack, previousItem?: PlacedTrack, nextItem?: PlacedTrack) {
+    const fallback = () => {
+      const points = trainPolylineForItem(part, item);
+      return previousItem ? orientPolyline(points, nearestConnectorToItem(part, item, previousItem) ?? undefined) : points;
+    };
+    const entry = nearestConnectorToItem(part, item, previousItem);
+    const exit = nearestConnectorToItem(part, item, nextItem);
+    if (!entry || !exit || (Math.hypot(entry.x - exit.x, entry.y - exit.y) < 0.001)) return fallback();
+
+    if (part.kind === 'turnout') {
+      const common = connectors(part, item).find(port => port.key === 'common');
+      if (common && (entry.key === 'common' || exit.key === 'common')) {
+        const outer = entry.key === 'common' ? exit : entry;
+        if (outer.key === 'diverging') {
+          const radius = part.radius ?? 0;
+          const angle = part.angle ?? 0;
+          const side = part.diverging === 'left' ? -1 : 1;
+          if (radius <= 0 || angle === 0) return [entry, exit];
+          const steps = Math.max(8, Math.ceil(Math.abs(angle) / 5));
+          const localPoints = Array.from({ length: steps + 1 }, (_, idx) => {
+            const theta = degToRad((angle * idx) / steps);
+            return {
+              x: radius * Math.sin(theta),
+              y: side * radius * (1 - Math.cos(theta)),
+            };
+          }).map(point => itemLocalPointToWorld(point, item));
+          return entry.key === 'common' ? localPoints : localPoints.reverse();
+        }
+        const route = [common, outer];
+        return entry.key === 'common' ? route : route.reverse();
+      }
+    }
+
+    const defaultPolyline = fallback();
+    if (defaultPolyline.length >= 2) {
+      const first = defaultPolyline[0];
+      const last = defaultPolyline[defaultPolyline.length - 1];
+      const matchesDefault = Math.hypot(entry.x - first.x, entry.y - first.y) + Math.hypot(exit.x - last.x, exit.y - last.y);
+      const matchesReverse = Math.hypot(entry.x - last.x, entry.y - last.y) + Math.hypot(exit.x - first.x, exit.y - first.y);
+      if (Math.min(matchesDefault, matchesReverse) < SNAP_DISTANCE_MM) {
+        return matchesReverse < matchesDefault ? [...defaultPolyline].reverse() : defaultPolyline;
+      }
+    }
+
+    return [entry, exit];
+  }
+
+  function trainCarOverlay(distance: number, index: number) {
+    const pose = trainPoseAtDistance(distance);
+    if (!pose) return null;
+    const isLead = index === 0;
+    const isTail = index === TRAIN_CAR_COUNT - 1;
+    return <g key={`secret-train-car-${index}`} transform={`translate(${mm(pose.x)} ${mm(pose.y)}) rotate(${pose.angle})`} pointerEvents="none">
+      <rect x={mm(-30)} y={mm(-10)} width={mm(60)} height={mm(20)} rx="5" fill="#8cc718" stroke="#111111" strokeWidth="2" />
+      <rect x={mm(-26)} y={mm(-8)} width={mm(52)} height={mm(16)} rx="3.5" fill="none" stroke="#111111" strokeWidth="1.4" opacity="0.65" />
+      {isLead && <rect x={mm(16)} y={mm(-7)} width={mm(9)} height={mm(14)} rx="2" fill="#0f172a" opacity="0.95" />}
+      {isTail && <rect x={mm(-25)} y={mm(-7)} width={mm(9)} height={mm(14)} rx="2" fill="#0f172a" opacity="0.95" />}
+      <rect x={mm(-22)} y={mm(-6)} width={mm(15)} height={mm(12)} rx="2" fill="#bfdbfe" stroke="#111111" strokeWidth="0.8" opacity="0.9" />
+      <rect x={mm(-3)} y={mm(-6)} width={mm(12)} height={mm(12)} rx="2" fill="#bfdbfe" stroke="#111111" strokeWidth="0.8" opacity="0.9" />
+      <rect x={mm(13)} y={mm(-6)} width={mm(10)} height={mm(12)} rx="2" fill="#bfdbfe" stroke="#111111" strokeWidth="0.8" opacity="0.9" />
+      {isLead && <line x1={mm(27)} y1={mm(-6)} x2={mm(27)} y2={mm(6)} stroke="#111111" strokeWidth="2" strokeLinecap="round" />}
+      {isTail && <line x1={mm(-27)} y1={mm(-6)} x2={mm(-27)} y2={mm(6)} stroke="#111111" strokeWidth="2" strokeLinecap="round" />}
+    </g>;
+  }
+
+  function seededRandom(seed: number) {
+    const value = Math.sin(seed) * 10000;
+    return value - Math.floor(value);
+  }
+
+  function buildTrainRoute(startUid?: string | null, routeSeed = 0): TrainRoute {
+    const trackItems = visibleItems.filter(item => {
+      const part = partMap.get(item.partId);
+      return part && part.kind !== 'building' && part.kind !== 'shape' && !part.isTerminal;
+    });
+    if (trackItems.length === 0) return { points: [], totalLength: 0, isLoop: false };
+    const trackUidSet = new Set(trackItems.map(item => item.uid));
+    const graph = buildConnectivityGraph(TRAIN_LOOP_CLOSE_DISTANCE_MM);
+    const components: string[][] = [];
+    const seen = new Set<string>();
+
+    for (const item of trackItems) {
+      if (seen.has(item.uid)) continue;
+      const component: string[] = [];
+      const stack = [item.uid];
+      seen.add(item.uid);
+      while (stack.length) {
+        const uid = stack.pop()!;
+        component.push(uid);
+        for (const next of graph.get(uid) ?? []) {
+          if (!trackUidSet.has(next) || seen.has(next)) continue;
+          seen.add(next);
+          stack.push(next);
+        }
+      }
+      components.push(component);
+    }
+
+    const component = (startUid ? components.find(group => group.includes(startUid)) : undefined)
+      ?? components.sort((a, b) => b.length - a.length)[0]
+      ?? [];
+    if (component.length === 0) return { points: [], totalLength: 0, isLoop: false };
+    const componentSet = new Set(component);
+    const degree = (uid: string) => [...(graph.get(uid) ?? [])].filter(next => componentSet.has(next)).length;
+    const byUid = new Map(trackItems.map(item => [item.uid, item]));
+    const isMultiPassCrossover = (uid: string) => {
+      const part = partMap.get(byUid.get(uid)?.partId ?? '');
+      return part?.id === 'double-crossover' || part?.sku === '20-210' || part?.sku === '20-310';
+    };
+    const maxVisitsFor = (uid: string) => isMultiPassCrossover(uid) ? Math.max(4, component.length) : 1;
+    const randomChoice = (currentUid: string, previousUid: string | undefined, candidates: string[]) => {
+      if (candidates.length <= 1) return candidates[0];
+      const keyScore = [...currentUid, ...(previousUid ?? ''), ...candidates.join('')].reduce((sum, char) => sum + char.charCodeAt(0), 0);
+      return candidates[Math.floor(seededRandom(routeSeed + keyScore) * candidates.length) % candidates.length];
+    };
+    const doubleTrackCrossingCandidates = (currentPart: TrackPart, currentItem: PlacedTrack, previousPort: Pose | null, candidates: string[]) => {
+      if (currentPart.kind !== 'crossing' || !isDoubleTrack(currentPart) || !previousPort?.key) return candidates;
+      const enteredFromLeft = previousPort.key.endsWith('-left');
+      const enteredFromRight = previousPort.key.endsWith('-right');
+      if (!enteredFromLeft && !enteredFromRight) return candidates;
+      const requiredSide = enteredFromLeft ? '-right' : '-left';
+      const oppositeSideCandidates = candidates.filter(uid => {
+        const item = byUid.get(uid);
+        const port = item ? nearestConnectorToItem(currentPart, currentItem, item) : null;
+        return port?.key?.endsWith(requiredSide);
+      });
+      return oppositeSideCandidates.length ? oppositeSideCandidates : candidates;
+    };
+    const chooseNext = (currentUid: string, previousUid: string | undefined, candidates: string[]) => {
+      const currentItem = byUid.get(currentUid);
+      const currentPart = currentItem ? partMap.get(currentItem.partId) : undefined;
+      const isRandomJunction = currentPart?.kind === 'turnout' || currentPart?.kind === 'crossing';
+      if (!previousUid) {
+        if (!currentItem || !currentPart) return candidates[0];
+        if (isRandomJunction) {
+          if (currentPart.kind === 'turnout') {
+            const commonCandidates = candidates.filter(uid => {
+              const item = byUid.get(uid);
+              const port = item ? nearestConnectorToItem(currentPart, currentItem, item) : null;
+              return port?.key === 'common';
+            });
+            return randomChoice(currentUid, previousUid, commonCandidates.length ? commonCandidates : candidates);
+          }
+          return randomChoice(currentUid, previousUid, candidates);
+        }
+        return candidates[0];
+      }
+      const previousItem = byUid.get(previousUid);
+      if (!currentItem || !previousItem || !currentPart) return candidates[0];
+      const previousPort = nearestConnectorToItem(currentPart, currentItem, previousItem);
+      if (currentPart.kind === 'crossing') return randomChoice(currentUid, previousUid, doubleTrackCrossingCandidates(currentPart, currentItem, previousPort, candidates));
+      const invalidTurnoutTransition = (port: Pose | null) => currentPart.kind === 'turnout'
+        && previousPort
+        && port
+        && previousPort.key !== 'common'
+        && port.key !== 'common';
+      if (currentPart.kind === 'turnout') {
+        const validCandidates = candidates.filter(uid => {
+          const item = byUid.get(uid);
+          const port = item ? nearestConnectorToItem(currentPart, currentItem, item) : null;
+          return !invalidTurnoutTransition(port);
+        });
+        if (validCandidates.length === 0) return undefined;
+        return randomChoice(currentUid, previousUid, validCandidates);
+      }
+      return candidates[0];
+    };
+    const requestedStart = startUid && componentSet.has(startUid) ? startUid : null;
+    const start = requestedStart
+      ?? component.find(uid => degree(uid) <= 1 && partMap.get(byUid.get(uid)?.partId ?? '')?.kind !== 'turnout')
+      ?? component.find(uid => degree(uid) <= 1)
+      ?? component.find(uid => partMap.get(byUid.get(uid)?.partId ?? '')?.kind !== 'turnout')
+      ?? component[0];
+    const ordered: string[] = [];
+    const visitCounts = new Map<string, number>();
+    const canVisit = (uid: string) => (visitCounts.get(uid) ?? 0) < maxVisitsFor(uid);
+    let current: string | undefined = start;
+    let previous: string | undefined;
+
+    while (current && canVisit(current)) {
+      ordered.push(current);
+      visitCounts.set(current, (visitCounts.get(current) ?? 0) + 1);
+      const neighbors = [...(graph.get(current) ?? [])].filter(uid => componentSet.has(uid) && uid !== previous);
+      const next = chooseNext(current, previous, neighbors.filter(canVisit));
+      previous = current;
+      current = next;
+    }
+
+    const rawPoints: { x: number; y: number }[] = [];
+    const closesLoop = ordered.length > 2 && !!graph.get(ordered[ordered.length - 1])?.has(ordered[0]);
+    for (let index = 0; index < ordered.length; index++) {
+      const uid = ordered[index];
+      const item = byUid.get(uid);
+      const part = item ? partMap.get(item.partId) : undefined;
+      if (!item || !part) continue;
+      const previousUid = index > 0 ? ordered[index - 1] : closesLoop ? ordered[ordered.length - 1] : undefined;
+      const nextUid = index < ordered.length - 1 ? ordered[index + 1] : closesLoop ? ordered[0] : undefined;
+      const previousItem = previousUid ? byUid.get(previousUid) : undefined;
+      const nextItem = nextUid ? byUid.get(nextUid) : undefined;
+      const polyline = trainPolylineThroughItem(part, item, previousItem, nextItem);
+      if (polyline.length === 0) continue;
+      rawPoints.push(...(rawPoints.length ? polyline.slice(1) : polyline));
+    }
+    if (rawPoints.length < 2) return { points: [], totalLength: 0, isLoop: false };
+    if (closesLoop && Math.hypot(rawPoints[0].x - rawPoints[rawPoints.length - 1].x, rawPoints[0].y - rawPoints[rawPoints.length - 1].y) <= TRAIN_LOOP_CLOSE_DISTANCE_MM) {
+      rawPoints.push(rawPoints[0]);
+    }
+
+    let totalLength = 0;
+    const points = rawPoints.map((point, idx) => {
+      if (idx > 0) totalLength += Math.hypot(point.x - rawPoints[idx - 1].x, point.y - rawPoints[idx - 1].y);
+      return { ...point, distance: totalLength };
+    });
+    return totalLength > 0 ? { points, totalLength, isLoop: closesLoop } : { points: [], totalLength: 0, isLoop: false };
   }
 
   function selectChainTo(endUid: string) {
@@ -1452,6 +1745,84 @@ export default function Page() {
     if (p.kind === 'turnout') return sum + (p.length ?? 0) + ((Math.PI * (p.radius ?? 0) * (p.angle ?? 0)) / 180);
     return sum + (isDoubleTrack(p) ? 2 : 1) * partLength(p, i);
   }, 0);
+  const trainRouteStartUid = trainEnabled ? trainStartUid : selectedTrainStartUid;
+  const trainRoute = useMemo(() => buildTrainRoute(trainRouteStartUid, trainRouteSeed), [visibleItems, partMap, trainRouteStartUid, trainRouteSeed]);
+
+  useEffect(() => {
+    if (!trainEnabled || trainRoute.totalLength <= 0) {
+      if (trainFrameRef.current !== null) cancelAnimationFrame(trainFrameRef.current);
+      trainFrameRef.current = null;
+      lastTrainFrameTimeRef.current = null;
+      return;
+    }
+
+    const step = (time: number) => {
+      const lastTime = lastTrainFrameTimeRef.current ?? time;
+      const deltaSeconds = Math.min(0.1, Math.max(0, (time - lastTime) / 1000));
+      lastTrainFrameTimeRef.current = time;
+      setTrainDistance(distance => {
+        const nextDistance = distance + deltaSeconds * trainSpeed * trainDirection;
+        if (trainRoute.isLoop) return ((nextDistance % trainRoute.totalLength) + trainRoute.totalLength) % trainRoute.totalLength;
+        if (nextDistance >= trainRoute.totalLength) {
+          setTrainDirection(-1);
+          return trainRoute.totalLength;
+        }
+        if (nextDistance <= 0) {
+          setTrainDirection(1);
+          return 0;
+        }
+        return nextDistance;
+      });
+      trainFrameRef.current = requestAnimationFrame(step);
+    };
+
+    trainFrameRef.current = requestAnimationFrame(step);
+    return () => {
+      if (trainFrameRef.current !== null) cancelAnimationFrame(trainFrameRef.current);
+      trainFrameRef.current = null;
+      lastTrainFrameTimeRef.current = null;
+    };
+  }, [trainEnabled, trainRoute.totalLength, trainRoute.isLoop, trainSpeed, trainDirection]);
+
+  function trainPoseAtDistance(distance: number) {
+    if (trainRoute.points.length < 2 || trainRoute.totalLength <= 0) return null;
+    const wrappedDistance = trainRoute.isLoop
+      ? ((distance % trainRoute.totalLength) + trainRoute.totalLength) % trainRoute.totalLength
+      : clamp(distance, 0, trainRoute.totalLength);
+    const segmentIndex = Math.max(1, trainRoute.points.findIndex(point => point.distance >= wrappedDistance));
+    const start = trainRoute.points[segmentIndex - 1];
+    const end = trainRoute.points[segmentIndex] ?? trainRoute.points[1];
+    const segmentLength = Math.max(0.001, end.distance - start.distance);
+    const t = clamp((wrappedDistance - start.distance) / segmentLength, 0, 1);
+    return {
+      x: start.x + (end.x - start.x) * t,
+      y: start.y + (end.y - start.y) * t,
+      angle: Math.atan2(end.y - start.y, end.x - start.x) * 180 / Math.PI,
+    };
+  }
+
+  function trainOverlay() {
+    if (!trainEnabled) return null;
+    if (trainRoute.totalLength <= 0) return null;
+    const carSpacing = 68;
+    const routePoints = trainRoute.points.map(point => `${mm(point.x)},${mm(point.y)}`).join(' ');
+    const startPoint = trainRoute.points[0];
+    const endPoint = trainRoute.points[trainRoute.points.length - 1];
+    return <g pointerEvents="none">
+      {showTrainRouteDebug && <>
+        <polyline points={routePoints} fill="none" stroke="#ef4444" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" opacity="0.82" />
+        {startPoint && <g transform={`translate(${mm(startPoint.x)} ${mm(startPoint.y)})`}>
+          <circle r="7" fill="#22c55e" stroke="#ffffff" strokeWidth="2.5" />
+          <text x="10" y="-10" fill="#22c55e" stroke="#ffffff" strokeWidth="3" paintOrder="stroke" fontSize="12" fontWeight="800">START</text>
+        </g>}
+        {endPoint && <g transform={`translate(${mm(endPoint.x)} ${mm(endPoint.y)})`}>
+          <rect x="-7" y="-7" width="14" height="14" fill="#ef4444" stroke="#ffffff" strokeWidth="2.5" />
+          <text x="10" y="18" fill="#ef4444" stroke="#ffffff" strokeWidth="3" paintOrder="stroke" fontSize="12" fontWeight="800">END</text>
+        </g>}
+      </>}
+      {Array.from({ length: TRAIN_CAR_COUNT }, (_, index) => trainCarOverlay(trainDistance - index * carSpacing, index))}
+    </g>;
+  }
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -1459,14 +1830,17 @@ export default function Page() {
       const tag = target?.tagName?.toLowerCase();
       const isTyping = tag === 'input' || tag === 'textarea' || tag === 'select' || target?.isContentEditable;
       if (isTyping) return;
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.code === 'KeyR') {
+        e.preventDefault();
+        setShowTrainRouteDebug(show => {
+          setMessage(show ? 'Train route overlay hidden.' : 'Train route overlay shown.');
+          return !show;
+        });
+        return;
+      }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
         e.preventDefault();
         if (e.shiftKey) redoChange(); else undoChange();
-        return;
-      }
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
-        e.preventDefault();
-        redoChange();
         return;
       }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c') {
@@ -1479,6 +1853,51 @@ export default function Page() {
         controlPaste();
         return;
       }
+      if (trainEnabled && e.key === '1') {
+        e.preventDefault();
+        setTrainSpeed(speed => {
+          const nextSpeed = Math.min(200, speed + 10);
+          setMessage(`Train speed ${nextSpeed}mm/s.`);
+          return nextSpeed;
+        });
+        return;
+      }
+      if (trainEnabled && e.key === '2') {
+        e.preventDefault();
+        setTrainSpeed(speed => {
+          const nextSpeed = Math.max(10, speed - 10);
+          setMessage(`Train speed ${nextSpeed}mm/s.`);
+          return nextSpeed;
+        });
+        return;
+      }
+      const isTrainShortcut = (e.ctrlKey || e.metaKey) && e.code === 'KeyY' && (e.altKey || e.shiftKey);
+      if (isTrainShortcut) {
+        e.preventDefault();
+        const nextStartUid = selectedTrainStartUid;
+        const nextSeed = Date.now() + Math.random();
+        const nextRoute = buildTrainRoute(nextStartUid, nextSeed);
+        if (!trainEnabled && nextRoute.totalLength <= 0) {
+          setMessage('No connected visible track route available for the train.');
+          return;
+        }
+        if (!trainEnabled) {
+          setTrainStartUid(nextStartUid);
+          setTrainRouteSeed(nextSeed);
+          setTrainDistance(0);
+          setTrainDirection(1);
+        }
+        setTrainEnabled(enabled => {
+          setMessage(enabled ? 'Train hidden.' : `Train running from ${selectedPart?.sku ?? 'the layout'} at ${trainSpeed}mm/s.`);
+          return !enabled;
+        });
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+        e.preventDefault();
+        redoChange();
+        return;
+      }
       if ((e.key === 'Delete' || e.key === 'Backspace') && selectedUids.length > 0) {
         e.preventDefault();
         deleteSelected();
@@ -1486,7 +1905,7 @@ export default function Page() {
     }
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [selectedUids, items, layers, activeLayerId]);
+  }, [selectedUids, selectedTrainStartUid, selectedPart, items, layers, activeLayerId, trainEnabled, trainRoute.totalLength, trainSpeed]);
 
   function dialogTitle() {
     if (!dialog) return '';
@@ -1845,6 +2264,7 @@ export default function Page() {
                 </g>
               ))}
             </g>}
+            {trainOverlay()}
             {expansionResizeHandles()}
           </svg>
           {heightProfileView()}
@@ -1852,7 +2272,7 @@ export default function Page() {
       </section>
 
       <aside className="panel flex min-h-0 flex-col overflow-hidden rounded-2xl border p-3">
-        <div ref={rightPanelScrollRef} className="min-h-0 flex-1 overflow-y-auto pr-1">
+        <div ref={rightPanelScrollRef} className="min-h-0 shrink overflow-y-auto pr-1">
           <h2 className="mb-2 text-base font-semibold">Layout Stats</h2>
           <div className="subpanel space-y-2 rounded-xl p-3 text-sm">
             <div className="flex justify-between"><span>Pieces</span><b>{items.length}</b></div>
@@ -2048,7 +2468,7 @@ export default function Page() {
           {Object.keys(ownedStock).length} SKU owned
           <input ref={stockFileRef} type="file" accept=".csv,text/csv" className="hidden" onChange={e => { const file = e.currentTarget.files?.[0]; if (file) importStockCsv(file); e.currentTarget.value = ''; }} />
         </div>
-        <div className="subpanel h-64 shrink-0 overflow-auto rounded-xl p-3 text-sm">
+        <div className="subpanel min-h-64 flex-1 overflow-auto rounded-xl p-3 text-sm">
           {stockComparisonRows.length === 0 ? <p className="muted">Place track to generate a parts list. Import stock CSV columns as SKU, Quantity to compare owned inventory.</p> : <div className="space-y-2">
             <div className="muted grid grid-cols-[minmax(0,1fr)_44px_44px_44px] gap-2 text-[11px] font-semibold uppercase tracking-wide">
               <span>Part</span><span className="text-right">Need</span><span className="text-right">Own</span><span className="text-right">Buy</span>
