@@ -2094,7 +2094,7 @@ export function TrackShape({
     const worldX = item.x + anchor.x * Math.cos(theta) - localY * Math.sin(theta);
     const worldY = item.y + anchor.x * Math.sin(theta) + localY * Math.cos(theta);
     const length = effectiveLength || part.length || 0;
-    const fontSize = length > 0 && length < 80 ? 9 : 11;
+    const fontSize = length > 0 && length < 80 ? 16 : 19;
     return (
       <g
         key="low-detail-sku-label"
