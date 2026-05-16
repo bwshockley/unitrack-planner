@@ -2089,12 +2089,16 @@ export function TrackShape({
     if (!useLowDetail || ghost || layer !== 'both' || !sku || part.kind === 'building' || part.kind === 'shape') return null;
 
     const anchor = lowDetailSkuAnchor();
+    const localY = item.flip ? -anchor.y : anchor.y;
+    const theta = degToRad(item.rotation);
+    const worldX = item.x + anchor.x * Math.cos(theta) - localY * Math.sin(theta);
+    const worldY = item.y + anchor.x * Math.sin(theta) + localY * Math.cos(theta);
     const length = effectiveLength || part.length || 0;
     const fontSize = length > 0 && length < 80 ? 9 : 11;
     return (
       <g
         key="low-detail-sku-label"
-        transform={`translate(${mm(anchor.x)} ${mm(anchor.y)}) scale(1 ${item.flip ? -1 : 1}) rotate(${-item.rotation})`}
+        transform={`translate(${mm(worldX)} ${mm(worldY)})`}
         pointerEvents="none"
       >
         <text
@@ -2249,5 +2253,8 @@ export function TrackShape({
           : railLine(0, 0, effectiveLength, 0, 'straight');
   }
 
-  return <g transform={transform} onPointerDown={onPointerDown} className={className} opacity={opacity}>{shape}{lowDetailSkuLabel()}</g>;
+  return <>
+    <g transform={transform} onPointerDown={onPointerDown} className={className} opacity={opacity}>{shape}</g>
+    {lowDetailSkuLabel()}
+  </>;
 }
