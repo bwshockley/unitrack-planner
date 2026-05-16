@@ -2069,6 +2069,52 @@ export function TrackShape({
     </>;
   }
 
+  function lowDetailSkuAnchor() {
+    if (part.kind === 'curve') {
+      const radius = part.radius ?? 0;
+      const radius2 = part.radius2;
+      const angle = part.angle ?? 0;
+      const centerRadius = radius2 ? (radius + radius2) / 2 : radius;
+      return arcPoint(centerRadius, radius2 ? centerRadius : radius, angle / 2);
+    }
+
+    if (part.kind === 'building' || part.kind === 'shape') return { x: 0, y: 0 };
+
+    const length = effectiveLength || part.length || 0;
+    return { x: length / 2, y: 0 };
+  }
+
+  function lowDetailSkuLabel() {
+    const sku = part.sku.trim();
+    if (!useLowDetail || ghost || layer !== 'both' || !sku || part.kind === 'building' || part.kind === 'shape') return null;
+
+    const anchor = lowDetailSkuAnchor();
+    const length = effectiveLength || part.length || 0;
+    const fontSize = length > 0 && length < 80 ? 9 : 11;
+    return (
+      <g
+        key="low-detail-sku-label"
+        transform={`translate(${mm(anchor.x)} ${mm(anchor.y)}) scale(1 ${item.flip ? -1 : 1}) rotate(${-item.rotation})`}
+        pointerEvents="none"
+      >
+        <text
+          x="0"
+          y="0"
+          fill="var(--node-label-fill)"
+          stroke="var(--node-label-stroke)"
+          strokeWidth="3"
+          paintOrder="stroke"
+          fontSize={fontSize}
+          fontWeight="800"
+          textAnchor="middle"
+          dominantBaseline="middle"
+        >
+          {sku}
+        </text>
+      </g>
+    );
+  }
+
   let shape = <></>;
 
   if (rendererFamily === 'building') {
@@ -2203,5 +2249,5 @@ export function TrackShape({
           : railLine(0, 0, effectiveLength, 0, 'straight');
   }
 
-  return <g transform={transform} onPointerDown={onPointerDown} className={className} opacity={opacity}>{shape}</g>;
+  return <g transform={transform} onPointerDown={onPointerDown} className={className} opacity={opacity}>{shape}{lowDetailSkuLabel()}</g>;
 }
