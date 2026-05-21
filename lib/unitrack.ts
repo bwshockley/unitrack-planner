@@ -123,7 +123,7 @@ export const UNITRACK_PARTS: TrackPart[] = [
   { id: 'r216-45', sku: '20-170', name: 'R216-45 Curve', kind: 'curve', radius: 216, angle: 45 },
   { id: 'r216-15', sku: '20-171', name: 'R216-15 Curve', kind: 'curve', radius: 216, angle: 15 },
   { id: 'r183-45', sku: '20-172', name: 'R183-45 Compact Curve', kind: 'curve', radius: 183, angle: 45, notes: 'Compact 183mm radius curve' },
-  { id: 'r150-45', sku: '20-174', name: 'R150-45 Curve', kind: 'curve', radius: 150, angle: 45 },
+  { id: 'r150-45', sku: '20-174', name: 'R150-45 Compact Curve', kind: 'curve', radius: 150, angle: 45 },
   { id: 'r117-45', sku: '20-176', name: 'R117-45 Compact Curve', kind: 'curve', radius: 117, angle: 45, notes: 'Compact 117mm radius curve' },
   { id: 'ep718-15l', sku: '20-202', name: '#6 Left Turnout', kind: 'turnout', length: 186, radius: 718, angle: 15, diverging: 'left' },
   { id: 'ep718-15r', sku: '20-203', name: '#6 Right Turnout', kind: 'turnout', length: 186, radius: 718, angle: 15, diverging: 'right' },

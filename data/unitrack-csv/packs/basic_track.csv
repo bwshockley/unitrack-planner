@@ -26,7 +26,7 @@ r481-15,20-160,R481-15 Curve,curve,,,,,481,,15,,,,,,,,,,,,,,
 r216-45,20-170,R216-45 Curve,curve,,,,,216,,45,,,,,,,,,,,,,,
 r216-15,20-171,R216-15 Curve,curve,,,,,216,,15,,,,,,,,,,,,,,
 r183-45,20-172,R183-45 Compact Curve,curve,,,,,183,,45,,,,,,,,,,,,,,Compact 183mm radius curve
-r150-45,20-174,R150-45 Curve,curve,,,,,150,,45,,,,,,,,,,,,,,
+r150-45,20-174,R150-45 Compact Curve,curve,,,,,150,,45,,,,,,,,,,,,,,
 r117-45,20-176,R117-45 Compact Curve,curve,,,,,117,,45,,,,,,,,,,,,,,Compact 117mm radius curve
 ep718-15l,20-202,#6 Left Turnout,turnout,,186,,,718,,15,left,,,,,,,,,,,,,
 ep718-15r,20-203,#6 Right Turnout,turnout,,186,,,718,,15,right,,,,,,,,,,,,,

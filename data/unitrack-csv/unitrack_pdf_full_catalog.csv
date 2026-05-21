@@ -43,7 +43,7 @@ sourcePage,symbol,sku,englishName,category,appKind,secondaryKinds,lengthMm,radiu
 1-6,20-170,20-170,R216-45 Curve,curve,curve,,,216,,45,,,,,,,included_in_app_native_csv
 1-6,20-171,20-171,R216-15 Curve,curve,curve,,,216,,15,,,,,,,included_in_app_native_csv
 1-6,20-172,20-172,R183-45 Compact Curve,curve,curve,,,183,,45,,,,,,Compact 183mm radius curve,included_in_app_native_csv
-1-6,20-174,20-174,R150-45 Curve,curve,curve,,,150,,45,,,,,,,included_in_app_native_csv
+1-6,20-174,20-174,R150-45 Compact Curve,curve,curve,,,150,,45,,,,,,,included_in_app_native_csv
 1-6,20-176,20-176,R117-45 Compact Curve,curve,curve,,,117,,45,,,,,,Compact 117mm radius curve,included_in_app_native_csv
 2,WR414/381-45PC,20-181,Concrete tie double curve R414/381 45°,curve,curve,Double|Concrete Tie,,414,381,45,,,,,,PDF page 2,catalog_only
 2,WR414/381-22.5PCAL,20-182,Concrete tie double curve R414/381 22.5° left,curve,curve,Double|Concrete Tie,,414,381,22.5,,,,,,PDF page 2,catalog_only

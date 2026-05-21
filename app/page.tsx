@@ -224,23 +224,27 @@ export default function Page() {
   }, [frameSize.width, frameSize.height, zoom, layoutBounds]);
   const filteredParts = useMemo(() => {
     const query = partSearch.trim().toLowerCase();
-    const typeFilteredParts = (() => {
-      if (partFilters.length === 0 || partFilters.includes('all')) return parts;
-      const selectedFilters = partFilters.filter(filter => filter !== 'all');
-      const partHasFilter = (part: TrackPart, filter: PartFilter) => part.kind === filter || part.secondaryKinds?.includes(filter as SecondaryTrackKind);
-      return parts.filter(part => partFilterMode === 'and'
-        ? selectedFilters.every(filter => partHasFilter(part, filter))
-        : selectedFilters.some(filter => partHasFilter(part, filter)));
-    })();
-    if (!query) return typeFilteredParts;
-    return typeFilteredParts.filter(part => [
+    const selectedFilters = partFilters.includes('all') ? [] : partFilters.filter(filter => filter !== 'all');
+    const partHasFilter = (part: TrackPart, filter: PartFilter) => part.kind === filter || part.secondaryKinds?.includes(filter as SecondaryTrackKind);
+    const partMatchesSearch = (part: TrackPart) => [
       part.sku,
       part.name,
       part.kind,
       part.secondaryKinds?.join(' '),
       part.notes,
       partLabel(part),
-    ].filter(Boolean).join(' ').toLowerCase().includes(query));
+    ].filter(Boolean).join(' ').toLowerCase().includes(query);
+
+    return parts.filter(part => {
+      const matchers = [
+        ...(query ? [partMatchesSearch(part)] : []),
+        ...selectedFilters.map(filter => partHasFilter(part, filter)),
+      ];
+      if (matchers.length === 0) return true;
+      return partFilterMode === 'and'
+        ? matchers.every(Boolean)
+        : matchers.some(Boolean);
+    });
   }, [parts, partFilters, partFilterMode, partSearch]);
   const partSearchLabel = partSearch.trim() ? `${filteredParts.length}/${parts.length} parts` : `${filteredParts.length} parts`;
   const isDark = theme === 'dark';
@@ -2046,19 +2050,20 @@ export default function Page() {
             </span>
           </div>
           <div className="max-h-0 overflow-hidden opacity-0 transition-all duration-200 group-hover:max-h-96 group-hover:opacity-100 group-focus-within:max-h-96 group-focus-within:opacity-100">
-            <div className="flex items-center justify-end pb-2 pt-1">
-              <div className="subpanel flex rounded-xl p-1 text-[11px]" role="group" aria-label="Part filter matching mode">
+            <div className="flex items-center justify-between gap-2 pb-2 pt-1">
+              <span className="muted px-1 text-[11px]">Match search and filters</span>
+              <div className="subpanel flex rounded-xl p-1 text-[11px]" role="group" aria-label="Part search and filter matching mode">
                 <button
                   type="button"
                   onClick={() => setPartFilterMode('and')}
                   className={`rounded-lg px-2 py-1 font-semibold ${partFilterMode === 'and' ? 'btn-primary' : 'muted'}`}
-                  title="Show only parts that match every selected filter"
+                  title="Show only parts that match the search text and every selected filter"
                 >AND</button>
                 <button
                   type="button"
                   onClick={() => setPartFilterMode('or')}
                   className={`rounded-lg px-2 py-1 font-semibold ${partFilterMode === 'or' ? 'btn-primary' : 'muted'}`}
-                  title="Show parts that match any selected filter"
+                  title="Show parts that match the search text or any selected filter"
                 >OR</button>
               </div>
             </div>
