@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowDown, ArrowUp, ChevronDown, Clipboard, ClipboardPaste, Download, Eye, EyeOff, FilePlus2, FileSpreadsheet, FlipHorizontal2, FolderOpen, Grid3X3, Lock, Maximize2, Moon, MousePointer2, Plus, RotateCcw, RotateCw, Save, Search, Sun, Trash2, Unlock, Upload, X, ZoomIn, ZoomOut } from 'lucide-react';
+import { ArrowDown, ArrowUp, ChevronDown, Clipboard, ClipboardPaste, Download, Eye, EyeOff, FilePlus2, FileSpreadsheet, FlipHorizontal2, FolderOpen, Grid3X3, Lock, Maximize2, Moon, MousePointer2, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Plus, RotateCcw, RotateCw, Save, Search, Sun, Trash2, Unlock, Upload, X, ZoomIn, ZoomOut } from 'lucide-react';
 import { PRIMARY_TRACK_KINDS, SECONDARY_TRACK_KINDS, UNITRACK_PARTS, partLabel, SecondaryTrackKind, TrackKind, TrackPart } from '@/lib/unitrack';
 import { clamp, connectors, degToRad, isDoubleTrack, isExpansionTrack, nodeHeight, norm, partLength, PlacedTrack, Pose, snap } from '@/lib/geometry';
 import { TrackShape } from '@/lib/renderers/TrackShape';
@@ -10,6 +10,7 @@ const PX_PER_MM = 1.15;
 const BOARD_W = 1800;
 const BOARD_H = 1000;
 const GRID = 33;
+const GRID_MAJOR = GRID * 5;
 const SNAP_DISTANCE_MM = 24;
 const TRAIN_LOOP_CLOSE_DISTANCE_MM = 10;
 const TRAIN_CAR_COUNT = 4;
@@ -55,6 +56,8 @@ export default function Page() {
   const [selectedNode, setSelectedNode] = useState<{ uid: string; key: string } | null>(null);
   const [selectionBox, setSelectionBox] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
   const [showGrid, setShowGrid] = useState(true);
+  const [leftPanelOpen, setLeftPanelOpen] = useState(true);
+  const [rightPanelOpen, setRightPanelOpen] = useState(true);
   const [showHeightProfile, setShowHeightProfile] = useState(false);
   const [gradeStartHeight, setGradeStartHeight] = useState('0');
   const [gradeEndHeight, setGradeEndHeight] = useState('0');
@@ -84,6 +87,7 @@ export default function Page() {
   const copiedItemsRef = useRef<PlacedTrack[]>([]);
   const historyPastRef = useRef<LayoutSnapshot[]>([]);
   const historyFutureRef = useRef<LayoutSnapshot[]>([]);
+  const pendingAutosaveFitRef = useRef(false);
   const trainFrameRef = useRef<number | null>(null);
   const lastTrainFrameTimeRef = useRef<number | null>(null);
   const [historyTick, setHistoryTick] = useState(0);
@@ -160,7 +164,10 @@ export default function Page() {
         setItems(importedItems);
         setActiveLayerId(importedActiveLayerId);
         setSelectedUids([]);
-        if (importedItems.length > 0) setMessage('Restored autosaved layout.');
+        if (importedItems.length > 0) {
+          pendingAutosaveFitRef.current = true;
+          setMessage('Restored autosaved layout.');
+        }
       }
     } catch {
       localStorage.removeItem(AUTOSAVE_LAYOUT_KEY);
@@ -222,6 +229,13 @@ export default function Page() {
       height: Math.ceil(Math.max(visibleHeightMm, contentHeight, GRID * 14) / GRID) * GRID,
     };
   }, [frameSize.width, frameSize.height, zoom, layoutBounds]);
+  const gridMarkers = useMemo(() => {
+    const xMarkers: number[] = [];
+    const yMarkers: number[] = [];
+    for (let x = 0; x <= canvasSize.width; x += GRID_MAJOR) xMarkers.push(x);
+    for (let y = 0; y <= canvasSize.height; y += GRID_MAJOR) yMarkers.push(y);
+    return { xMarkers, yMarkers };
+  }, [canvasSize.width, canvasSize.height]);
   const filteredParts = useMemo(() => {
     const query = partSearch.trim().toLowerCase();
     const selectedFilters = partFilters.includes('all') ? [] : partFilters.filter(filter => filter !== 'all');
@@ -267,6 +281,13 @@ export default function Page() {
       });
     });
   }, [selectedUid, selectedUids.length]);
+
+  useEffect(() => {
+    if (!pendingAutosaveFitRef.current || !layoutAutosaveReady || !layoutBounds || visibleItems.length === 0) return;
+    if (frameSize.width <= 0 || frameSize.height <= 0) return;
+    pendingAutosaveFitRef.current = false;
+    requestAnimationFrame(() => fitLayout('Restored autosaved layout and zoomed to fit.'));
+  }, [layoutAutosaveReady, layoutBounds, visibleItems.length, frameSize.width, frameSize.height]);
 
   const inventory = useMemo(() => items.reduce<Record<string, number>>((a, i) => { a[i.partId] = (a[i.partId] ?? 0) + 1; return a; }, {}), [items]);
   const stockComparisonRows = useMemo<StockRow[]>(() => {
@@ -1280,6 +1301,10 @@ export default function Page() {
   }
 
   function zoomToFitLayout() {
+    return fitLayout('Zoomed to fit all placed parts in the visible grid area.');
+  }
+
+  function fitLayout(successMessage: string) {
     const frame = canvasFrameRef.current;
     if (!frame) return;
 
@@ -1305,7 +1330,13 @@ export default function Page() {
     requestAnimationFrame(() => {
       frame.scrollTo({ left: Math.max(0, mm(minX) * clampedZoom), top: Math.max(0, mm(minY) * clampedZoom), behavior: 'smooth' });
     });
-    setMessage('Zoomed to fit all placed parts in the visible grid area.');
+    setMessage(successMessage);
+  }
+
+  function gridMeasureLabel(valueMm: number) {
+    return valueMm >= 1000
+      ? `${Number((valueMm / 1000).toFixed(2))}m`
+      : `${Math.round(valueMm)}mm`;
   }
 
 
@@ -2020,9 +2051,37 @@ export default function Page() {
       </div>
     </header>
 
-    <div className="grid min-h-0 min-w-0 flex-1 grid-cols-[270px_minmax(0,1fr)_280px] gap-3 overflow-hidden p-3">
-      <aside className="panel flex min-h-0 flex-col rounded-2xl border p-3">
-        <h2 className="mb-2 shrink-0 text-base font-semibold">Parts Palette</h2>
+    <div
+      className="grid min-h-0 min-w-0 flex-1 gap-3 overflow-hidden p-3 transition-[grid-template-columns] duration-200"
+      style={{ gridTemplateColumns: `${leftPanelOpen ? '270px' : '42px'} minmax(0, 1fr) ${rightPanelOpen ? '280px' : '42px'}` }}
+    >
+      <aside className={`panel flex min-h-0 flex-col overflow-hidden rounded-2xl border ${leftPanelOpen ? 'p-3' : 'p-1'}`}>
+        {!leftPanelOpen ? (
+          <div className="flex h-full flex-col items-center gap-3">
+            <button
+              onClick={() => setLeftPanelOpen(true)}
+              className="ui-button ui-button-sm btn h-8 w-8 rounded-lg p-0"
+              aria-label="Expand parts palette"
+              title="Expand parts palette"
+            >
+              <PanelLeftOpen className="h-4 w-4"/>
+            </button>
+            <div className="flex min-h-0 flex-1 items-center justify-center">
+              <span className="rotate-90 whitespace-nowrap text-xs font-semibold tracking-normal muted">Parts Palette</span>
+            </div>
+          </div>
+        ) : <>
+        <h2 className="mb-2 flex shrink-0 items-center justify-between gap-2 text-base font-semibold">
+          <span>Parts Palette</span>
+          <button
+            onClick={() => setLeftPanelOpen(false)}
+            className="ui-button ui-button-sm btn rounded-lg px-2 py-1 text-xs"
+            aria-label="Shrink parts palette"
+            title="Shrink parts palette"
+          >
+            <PanelLeftClose className="h-3.5 w-3.5"/>
+          </button>
+        </h2>
         <div className="mb-2 grid shrink-0 grid-cols-3 gap-1">
           <button onClick={exportPaletteCsv} className="ui-button ui-button-sm btn rounded-xl px-2 py-2 text-[11px]"><Download className="h-3.5 w-3.5"/>Export</button>
           <button onClick={() => paletteFileRef.current?.click()} className="ui-button ui-button-sm btn rounded-xl px-2 py-2 text-[11px]"><Upload className="h-3.5 w-3.5"/>Import</button>
@@ -2105,6 +2164,7 @@ export default function Page() {
             <div className="muted">{partLabel(p)}</div>
           </button>)}
         </div>
+        </>}
       </aside>
 
       <section className="panel flex min-h-0 min-w-0 flex-col rounded-2xl border p-3">
@@ -2215,6 +2275,62 @@ export default function Page() {
           >
             {showGrid && <defs><pattern id="grid" width={mm(GRID)} height={mm(GRID)} patternUnits="userSpaceOnUse"><path d={`M ${mm(GRID)} 0 L 0 0 0 ${mm(GRID)}`} fill="none" stroke="var(--grid-line)" strokeWidth="1" /></pattern></defs>}
             {showGrid && <rect width={mm(canvasSize.width)} height={mm(canvasSize.height)} fill="url(#grid)" pointerEvents="none" />}
+            {showGrid && <g pointerEvents="none">
+              {gridMarkers.xMarkers.map(x => (
+                <line
+                  key={`grid-major-x-${x}`}
+                  x1={mm(x)}
+                  y1="0"
+                  x2={mm(x)}
+                  y2={mm(canvasSize.height)}
+                  stroke="var(--grid-major-line)"
+                  strokeWidth={1.35 / zoom}
+                  opacity="0.48"
+                />
+              ))}
+              {gridMarkers.yMarkers.map(y => (
+                <line
+                  key={`grid-major-y-${y}`}
+                  x1="0"
+                  y1={mm(y)}
+                  x2={mm(canvasSize.width)}
+                  y2={mm(y)}
+                  stroke="var(--grid-major-line)"
+                  strokeWidth={1.35 / zoom}
+                  opacity="0.48"
+                />
+              ))}
+              {gridMarkers.xMarkers.map(x => (
+                <text
+                  key={`grid-label-x-${x}`}
+                  x={mm(x) + 6 / zoom}
+                  y={16 / zoom}
+                  fill="var(--grid-label)"
+                  stroke="var(--canvas-bg)"
+                  strokeWidth={3 / zoom}
+                  paintOrder="stroke"
+                  fontSize={12 / zoom}
+                  fontWeight="700"
+                >
+                  {gridMeasureLabel(x)}
+                </text>
+              ))}
+              {gridMarkers.yMarkers.filter(y => y > 0).map(y => (
+                <text
+                  key={`grid-label-y-${y}`}
+                  x={6 / zoom}
+                  y={mm(y) - 6 / zoom}
+                  fill="var(--grid-label)"
+                  stroke="var(--canvas-bg)"
+                  strokeWidth={3 / zoom}
+                  paintOrder="stroke"
+                  fontSize={12 / zoom}
+                  fontWeight="700"
+                >
+                  {gridMeasureLabel(y)}
+                </text>
+              ))}
+            </g>}
             {selectionBox && <rect
               x={mm(Math.min(selectionBox.x1, selectionBox.x2))}
               y={mm(Math.min(selectionBox.y1, selectionBox.y2))}
@@ -2276,9 +2392,34 @@ export default function Page() {
         </div>
       </section>
 
-      <aside className="panel flex min-h-0 flex-col overflow-hidden rounded-2xl border p-3">
+      <aside className={`panel flex min-h-0 flex-col overflow-hidden rounded-2xl border ${rightPanelOpen ? 'p-3' : 'p-1'}`}>
+        {!rightPanelOpen ? (
+          <div className="flex h-full flex-col items-center gap-3">
+            <button
+              onClick={() => setRightPanelOpen(true)}
+              className="ui-button ui-button-sm btn h-8 w-8 rounded-lg p-0"
+              aria-label="Expand layout tools"
+              title="Expand layout tools"
+            >
+              <PanelRightOpen className="h-4 w-4"/>
+            </button>
+            <div className="flex min-h-0 flex-1 items-center justify-center">
+              <span className="-rotate-90 whitespace-nowrap text-xs font-semibold tracking-normal muted">Layout Tools</span>
+            </div>
+          </div>
+        ) : <>
         <div ref={rightPanelScrollRef} className="min-h-0 shrink overflow-y-auto pr-1">
-          <h2 className="mb-2 text-base font-semibold">Layout Stats</h2>
+          <h2 className="mb-2 flex items-center justify-between gap-2 text-base font-semibold">
+            <span>Layout Stats</span>
+            <button
+              onClick={() => setRightPanelOpen(false)}
+              className="ui-button ui-button-sm btn rounded-lg px-2 py-1 text-xs"
+              aria-label="Shrink layout tools"
+              title="Shrink layout tools"
+            >
+              <PanelRightClose className="h-3.5 w-3.5"/>
+            </button>
+          </h2>
           <div className="subpanel space-y-2 rounded-xl p-3 text-sm">
             <div className="flex justify-between"><span>Pieces</span><b>{items.length}</b></div>
             <div className="flex justify-between"><span>Track length</span><b>{Math.round(totalLength)} mm</b></div>
@@ -2488,6 +2629,7 @@ export default function Page() {
             ))}
           </div>}
         </div>
+        </>}
       </aside>
     </div>
     {dialog && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4" role="dialog" aria-modal="true" aria-labelledby="planner-dialog-title" onPointerDown={e => { if (e.currentTarget === e.target) setDialog(null); }}>

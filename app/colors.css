@@ -21,6 +21,8 @@
   --selected-border: #10b981;
   --canvas-bg: #ffffff;
   --grid-line: #cbd5e1;
+  --grid-major-line: #cbd5e1;
+  --grid-label: #334155;
   --board-outline: #0284c7;
   --selection-fill: #0284c7;
   --selection-stroke: #0284c7;
@@ -149,6 +151,8 @@
   --selected-border: #34d399;
   --canvas-bg: #020617;
   --grid-line: #1e293b;
+  --grid-major-line: #263445;
+  --grid-label: #cbd5e1;
   --board-outline: #38bdf8;
   --selection-fill: #38bdf8;
   --selection-stroke: #38bdf8;
