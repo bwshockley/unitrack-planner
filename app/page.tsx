@@ -12,6 +12,7 @@ const BOARD_H = 1000;
 const GRID = 33;
 const GRID_MAJOR = GRID * 5;
 const SNAP_DISTANCE_MM = 24;
+const SPRING_CONNECTION_MAX_FLEX_DEG = 2;
 const TRAIN_LOOP_CLOSE_DISTANCE_MM = 10;
 const TRAIN_CAR_COUNT = 4;
 const AUTOSAVE_LAYOUT_KEY = 'unitrack-planner-layout-autosave';
@@ -26,6 +27,9 @@ type LayoutSnapshot = { items: PlacedTrack[]; layers: LayoutLayer[]; activeLayer
 type StockRow = { sku: string; name: string; required: number; owned: number; purchase: number; kind: string };
 type TrainPathPoint = { x: number; y: number; distance: number };
 type TrainRoute = { points: TrainPathPoint[]; totalLength: number; isLoop: boolean };
+type DragOrigin = { x: number; y: number; rotation: number };
+type SpringPathEdge = { parentUid: string; parentKey: string; childUid: string; childKey: string };
+type SpringDragState = { rootUid: string; anchorUid: string; pathUids: string[]; edges: SpringPathEdge[]; origins: Record<string, DragOrigin> };
 type DialogState =
   | { kind: 'save-layout'; fileName: string }
   | { kind: 'save-palette'; fileName: string }
@@ -56,6 +60,8 @@ export default function Page() {
   const [selectedNode, setSelectedNode] = useState<{ uid: string; key: string } | null>(null);
   const [selectionBox, setSelectionBox] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
   const [showGrid, setShowGrid] = useState(true);
+  const [flexTrackEnabled, setFlexTrackEnabled] = useState(true);
+  const [flexAnchorUid, setFlexAnchorUid] = useState<string | null>(null);
   const [leftPanelOpen, setLeftPanelOpen] = useState(true);
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
   const [showHeightProfile, setShowHeightProfile] = useState(false);
@@ -76,7 +82,7 @@ export default function Page() {
   const [trainStartUid, setTrainStartUid] = useState<string | null>(null);
   const [trainRouteSeed, setTrainRouteSeed] = useState(0);
   const [showTrainRouteDebug, setShowTrainRouteDebug] = useState(false);
-  const drag = useRef<{ uids: string[]; startX: number; startY: number; origins: Record<string, { x: number; y: number }> } | null>(null);
+  const drag = useRef<{ uids: string[]; startX: number; startY: number; origins: Record<string, DragOrigin>; spring?: SpringDragState } | null>(null);
   const resizeDrag = useRef<{ uid: string; handle: 'start' | 'end'; startLength: number; startX: number; startY: number; startItemX: number; startItemY: number; rotation: number; flip?: boolean; min: number; max: number } | null>(null);
   const boxDrag = useRef<{ x: number; y: number } | null>(null);
   const canvasFrameRef = useRef<HTMLDivElement | null>(null);
@@ -208,6 +214,13 @@ export default function Page() {
   const isItemLocked = (item: Pick<PlacedTrack, 'layerId'>) => getItemLayer(item)?.locked === true;
   const visibleItems = useMemo(() => items.filter(item => isItemVisible(item)), [items, layerMap]);
   const editableVisibleItems = useMemo(() => visibleItems.filter(item => !isItemLocked(item)), [visibleItems, layerMap]);
+
+  useEffect(() => {
+    if (!flexAnchorUid) return;
+    const anchor = items.find(item => item.uid === flexAnchorUid);
+    if (!flexTrackEnabled || !anchor || !isItemVisible(anchor) || isItemLocked(anchor)) setFlexAnchorUid(null);
+  }, [flexTrackEnabled, flexAnchorUid, items, layerMap]);
+
   const layoutBounds = useMemo(() => {
     const points = visibleItems.flatMap(item => itemSelectionPoints(item));
     if (!points.length) return null;
@@ -389,6 +402,10 @@ export default function Page() {
     };
   }
 
+  function signedAngleDelta(fromDeg: number, toDeg: number) {
+    return ((toDeg - fromDeg + 540) % 360) - 180;
+  }
+
   function nodesCompatible(a: Pose, b: Pose) {
     // Platform/building connector nodes intentionally only mate with other platform nodes.
     // Track nodes have no nodeKind, so platform connectors are excluded from track snapping/validation.
@@ -460,6 +477,160 @@ export default function Page() {
     const snapped = endpointSnap(candidate, sourceItems);
     if (snapped !== candidate) return snapped;
     return gridSnap ? { ...candidate, x: snap(candidate.x, GRID), y: snap(candidate.y, GRID) } : candidate;
+  }
+
+  function connectorByKey(part: TrackPart, item: PlacedTrack, key: string) {
+    return connectors(part, item).find((connector, index) => (connector.key ?? String(index)) === key);
+  }
+
+  function localConnectorByKey(part: TrackPart, item: PlacedTrack, key: string) {
+    return connectorByKey(part, { ...item, x: 0, y: 0, rotation: 0 }, key);
+  }
+
+  function buildSpringDragState(rootUid: string, anchorUid: string | null, sourceItems: PlacedTrack[]): SpringDragState | undefined {
+    if (!anchorUid || anchorUid === rootUid) return undefined;
+    const editableItems = sourceItems.filter(item => isItemVisible(item) && !isItemLocked(item));
+    const editableUidSet = new Set(editableItems.map(item => item.uid));
+    if (!editableUidSet.has(rootUid) || !editableUidSet.has(anchorUid)) return undefined;
+
+    const ports = editableItems.flatMap(item => {
+      const part = partMap.get(item.partId);
+      if (!part) return [];
+      return connectors(part, item).map((connector, index) => ({
+        uid: item.uid,
+        key: connector.key ?? String(index),
+        x: connector.x,
+        y: connector.y,
+        heading: connector.heading,
+        nodeKind: connector.nodeKind,
+        partSku: connector.partSku,
+        compatibilityTag: connector.compatibilityTag,
+        compatibleTags: connector.compatibleTags,
+      }));
+    });
+
+    const adjacency = new Map<string, { uid: string; ownKey: string; otherKey: string }[]>();
+    for (const item of editableItems) adjacency.set(item.uid, []);
+
+    for (let a = 0; a < ports.length; a++) {
+      for (let b = a + 1; b < ports.length; b++) {
+        const pa = ports[a];
+        const pb = ports[b];
+        if (pa.uid === pb.uid) continue;
+        if (!nodesConnected(pa, pb)) continue;
+        adjacency.get(pa.uid)?.push({ uid: pb.uid, ownKey: pa.key, otherKey: pb.key });
+        adjacency.get(pb.uid)?.push({ uid: pa.uid, ownKey: pb.key, otherKey: pa.key });
+      }
+    }
+
+    const parent = new Map<string, { uid: string; ownKey: string; otherKey: string }>();
+    const queue = [anchorUid];
+    const seen = new Set<string>([anchorUid]);
+    while (queue.length) {
+      const current = queue.shift()!;
+      if (current === rootUid) break;
+      for (const next of adjacency.get(current) ?? []) {
+        if (seen.has(next.uid)) continue;
+        seen.add(next.uid);
+        parent.set(next.uid, { uid: current, ownKey: next.ownKey, otherKey: next.otherKey });
+        queue.push(next.uid);
+      }
+    }
+
+    if (!seen.has(rootUid)) return undefined;
+    const pathUids = [rootUid];
+    const edges: SpringPathEdge[] = [];
+    let current = rootUid;
+    while (current !== anchorUid) {
+      const step = parent.get(current);
+      if (!step) return undefined;
+      edges.push({ parentUid: step.uid, parentKey: step.ownKey, childUid: current, childKey: step.otherKey });
+      current = step.uid;
+      pathUids.push(current);
+    }
+    pathUids.reverse();
+    edges.reverse();
+
+    const origins = Object.fromEntries(
+      editableItems
+        .filter(item => pathUids.includes(item.uid))
+        .map(item => [item.uid, { x: item.x, y: item.y, rotation: item.rotation }])
+    );
+
+    return {
+      rootUid,
+      anchorUid,
+      pathUids,
+      edges,
+      origins,
+    };
+  }
+
+  function springAdjustedItems(prev: PlacedTrack[], spring: SpringDragState, rootCandidate: PlacedTrack) {
+    const byUid = new Map(prev.map(item => [item.uid, item]));
+    const pathUidSet = new Set(spring.pathUids);
+    const anchor = byUid.get(spring.anchorUid);
+    if (!anchor || spring.edges.length === 0) return prev;
+
+    const buildPoses = (flexes: number[]) => {
+      const nextByUid = new Map<string, PlacedTrack>([[spring.anchorUid, anchor]]);
+      spring.edges.forEach((edge, index) => {
+        const parent = nextByUid.get(edge.parentUid);
+        const parentPart = parent ? partMap.get(parent.partId) : undefined;
+        const child = byUid.get(edge.childUid);
+        const childPart = child ? partMap.get(child.partId) : undefined;
+        if (!parent || !parentPart || !child || !childPart) return;
+        const parentPort = connectorByKey(parentPart, parent, edge.parentKey);
+        const childLocalPort = localConnectorByKey(childPart, child, edge.childKey);
+        if (!parentPort || !childLocalPort) return;
+        const childRotation = norm(parentPort.heading + 180 - childLocalPort.heading + flexes[index]);
+        const rotatedChildPort = rotatePoint(childLocalPort, childRotation);
+        nextByUid.set(edge.childUid, {
+          ...child,
+          x: parentPort.x - rotatedChildPort.x,
+          y: parentPort.y - rotatedChildPort.y,
+          rotation: childRotation,
+        });
+      });
+      return nextByUid;
+    };
+
+    const flexes = spring.edges.map(edge => {
+      const parentOrigin = spring.origins[edge.parentUid];
+      const childOrigin = spring.origins[edge.childUid];
+      const parent = byUid.get(edge.parentUid);
+      const child = byUid.get(edge.childUid);
+      const parentPart = parent ? partMap.get(parent.partId) : undefined;
+      const childPart = child ? partMap.get(child.partId) : undefined;
+      if (!parent || !child || !parentPart || !childPart || !parentOrigin || !childOrigin) return 0;
+      const parentPort = connectorByKey(parentPart, { ...parent, ...parentOrigin }, edge.parentKey);
+      const childLocalPort = localConnectorByKey(childPart, child, edge.childKey);
+      if (!parentPort || !childLocalPort) return 0;
+      const nominalRotation = norm(parentPort.heading + 180 - childLocalPort.heading);
+      return clamp(signedAngleDelta(nominalRotation, childOrigin.rotation), -SPRING_CONNECTION_MAX_FLEX_DEG, SPRING_CONNECTION_MAX_FLEX_DEG);
+    });
+
+    for (let iteration = 0; iteration < 18; iteration++) {
+      for (let index = spring.edges.length - 1; index >= 0; index--) {
+        const poses = buildPoses(flexes);
+        const rootPose = poses.get(spring.rootUid);
+        const edge = spring.edges[index];
+        const parent = poses.get(edge.parentUid);
+        const parentPart = parent ? partMap.get(parent.partId) : undefined;
+        if (!rootPose || !parent || !parentPart) continue;
+        const pivot = connectorByKey(parentPart, parent, edge.parentKey);
+        if (!pivot) continue;
+        const currentAngle = Math.atan2(rootPose.y - pivot.y, rootPose.x - pivot.x) * 180 / Math.PI;
+        const targetAngle = Math.atan2(rootCandidate.y - pivot.y, rootCandidate.x - pivot.x) * 180 / Math.PI;
+        flexes[index] = clamp(flexes[index] + signedAngleDelta(currentAngle, targetAngle), -SPRING_CONNECTION_MAX_FLEX_DEG, SPRING_CONNECTION_MAX_FLEX_DEG);
+      }
+    }
+
+    const nextByUid = buildPoses(flexes);
+    return prev.map(item => {
+      if (!pathUidSet.has(item.uid)) return item;
+      return nextByUid.get(item.uid) ?? item;
+    });
   }
 
   function previewPart(partId: string, x: number, y: number, rotation = 0) {
@@ -828,6 +999,17 @@ export default function Page() {
     const part = partMap.get(item.partId);
     const port = part ? connectors(part, item).find((connector, index) => (connector.key ?? String(index)) === key) : undefined;
     setMessage(`Selected node ${port?.label ?? key} for elevation editing.`);
+  }
+
+  function setFlexAnchorFromSelection() {
+    if (!selectedItem || isItemLocked(selectedItem) || !isItemVisible(selectedItem)) return;
+    const part = partMap.get(selectedItem.partId);
+    if (!part || part.kind === 'building' || part.kind === 'shape') {
+      setMessage('Select a track piece before setting a flex anchor.');
+      return;
+    }
+    setFlexAnchorUid(selectedItem.uid);
+    setMessage(`Flex anchor set to ${part.sku}. Drag another connected piece to flex the chain.`);
   }
 
   function nodeProgressWithinItem(part: TrackPart, item: PlacedTrack, connector: Pose) {
@@ -1752,6 +1934,17 @@ export default function Page() {
     (e.currentTarget as SVGGElement).setPointerCapture(e.pointerId);
     setGhost(null);
     if (e.shiftKey) { selectChainTo(item.uid); return; }
+    if (flexTrackEnabled && (e.ctrlKey || e.metaKey)) {
+      setFlexAnchorUid(item.uid);
+      setSelectedUids([item.uid]);
+      setMessage(`Flex anchor set to ${partMap.get(item.partId)?.sku ?? 'selected track'}. Drag another connected piece to flex the chain.`);
+      return;
+    }
+    if (flexTrackEnabled && flexAnchorUid === item.uid) {
+      setSelectedUids([item.uid]);
+      setMessage('That piece is the flex anchor and stays fixed. Ctrl-click another piece to move the anchor.');
+      return;
+    }
     const additive = e.ctrlKey || e.metaKey;
     let dragUids = selectedUids.includes(item.uid) && !additive ? selectedUids : [item.uid];
     if (additive) {
@@ -1764,7 +1957,18 @@ export default function Page() {
     const svg = e.currentTarget.ownerSVGElement as SVGSVGElement;
     const p = svgPointFromClient(svg, e.clientX, e.clientY);
     const dragSet = new Set(dragUids);
-    drag.current = { uids: dragUids, startX: p.x, startY: p.y, origins: Object.fromEntries(items.filter(i => dragSet.has(i.uid)).map(i => [i.uid, { x: i.x, y: i.y }])) };
+    const spring = flexTrackEnabled && dragUids.length === 1 ? buildSpringDragState(dragUids[0], flexAnchorUid, items) : undefined;
+    if (flexTrackEnabled && dragUids.length === 1 && flexAnchorUid && !spring && dragUids[0] !== flexAnchorUid) {
+      setMessage('No connected editable chain found between the flex anchor and dragged piece.');
+    }
+    const originUids = new Set(spring?.pathUids ?? dragUids);
+    drag.current = {
+      uids: dragUids,
+      startX: p.x,
+      startY: p.y,
+      origins: Object.fromEntries(items.filter(i => originUids.has(i.uid) || dragSet.has(i.uid)).map(i => [i.uid, { x: i.x, y: i.y, rotation: i.rotation }])),
+      spring,
+    };
   }
 
   const totalLength = items.reduce((sum, i) => {
@@ -2023,6 +2227,21 @@ export default function Page() {
       </div>
       <div className="flex min-w-0 flex-wrap items-center gap-2">
         <button onClick={() => setShowGrid(!showGrid)} className="ui-button ui-button-md btn rounded-xl px-3 py-2 text-sm"><Grid3X3 className="h-4 w-4"/>Grid {showGrid ? 'on' : 'off'}</button>
+        <button
+          onClick={() => {
+            setFlexTrackEnabled(enabled => {
+              const next = !enabled;
+              if (!next) setFlexAnchorUid(null);
+              setMessage(next ? 'Flexible track enabled. Select a track piece and use Set flex anchor, then drag another connected piece.' : 'Flexible track disabled. Dragging uses rigid track snapping.');
+              return next;
+            });
+          }}
+          className={`ui-button ui-button-md rounded-xl px-3 py-2 text-sm ${flexTrackEnabled ? 'btn-primary' : 'btn'}`}
+          aria-pressed={flexTrackEnabled}
+          title={flexTrackEnabled ? 'Disable flexible track dragging' : 'Enable flexible track dragging'}
+        >
+          <MousePointer2 className="h-4 w-4"/>Flex {flexTrackEnabled ? (flexAnchorUid ? 'anchored' : 'on') : 'off'}
+        </button>
         <button onClick={() => setShowHeightProfile(v => !v)} className="ui-button ui-button-md btn rounded-xl px-3 py-2 text-sm">Side View {showHeightProfile ? 'on' : 'off'}</button>
         <button
           onClick={() => setRenderDetail(detail => detail === 'high' ? 'low' : 'high')}
@@ -2240,6 +2459,25 @@ export default function Page() {
                 const moving = new Set(activeDrag.uids);
                 const isSingleDrag = activeDrag.uids.length === 1;
                 const origins = activeDrag.origins;
+                if (isSingleDrag && activeDrag.spring) {
+                  const rootUid = activeDrag.spring.rootUid;
+                  const rootOrigin = origins[rootUid];
+                  if (!rootOrigin) return;
+                  const path = new Set(activeDrag.spring.pathUids);
+                  setItems(prev => {
+                    const rootItem = prev.find(i => i.uid === rootUid);
+                    if (!rootItem) return prev;
+                    const outsidePath = prev.filter(i => !path.has(i.uid));
+                    const rootCandidate = gridOrEndpointSnap({
+                      ...rootItem,
+                      x: rootOrigin.x + dx,
+                      y: rootOrigin.y + dy,
+                      rotation: rootOrigin.rotation,
+                    }, outsidePath);
+                    return springAdjustedItems(prev, activeDrag.spring!, rootCandidate);
+                  });
+                  return;
+                }
                 setItems(prev => prev.map(i => {
                   if (!moving.has(i.uid)) return i;
                   const origin = origins[i.uid];
@@ -2362,6 +2600,14 @@ export default function Page() {
                 onNodeClick={selectNodeForElevation}
               />;
             }))}
+            {flexTrackEnabled && flexAnchorUid && (() => {
+              const anchor = items.find(item => item.uid === flexAnchorUid && isItemVisible(item));
+              if (!anchor) return null;
+              return <g transform={`translate(${mm(anchor.x)} ${mm(anchor.y)})`} pointerEvents="none">
+                <circle r="10" fill="var(--node-active-ring)" stroke="var(--connection-node-ring)" strokeWidth="2.5" />
+                <MousePointer2 x="-6" y="-6" width="12" height="12" color="var(--connection-node-ring)" strokeWidth="2.5" />
+              </g>;
+            })()}
             {selectedUids.length > 1 && <g pointerEvents="none">
               {selectedGroupEndpointMarkers().map(marker => (
                 <g key={`group-node-${marker.label}-${marker.key}`} transform={`translate(${mm(marker.connector.x)} ${mm(marker.connector.y)})`}>
@@ -2500,6 +2746,14 @@ export default function Page() {
               <div>x {selectedItem.x.toFixed(1)} mm · y {selectedItem.y.toFixed(1)} mm</div>
               <div>rotation {selectedItem.rotation}°</div>
               <div>flipped {selectedItem.flip ? 'yes' : 'no'}</div>
+              {flexTrackEnabled && selectedPart && selectedPart.kind !== 'building' && selectedPart.kind !== 'shape' && <button
+                onClick={setFlexAnchorFromSelection}
+                disabled={isItemLocked(selectedItem)}
+                className={`ui-button ui-button-md mt-2 rounded-lg px-3 py-2 text-xs disabled:opacity-50 ${flexAnchorUid === selectedItem.uid ? 'btn-primary' : 'btn'}`}
+                title={flexAnchorUid === selectedItem.uid ? 'This piece is the current flex anchor' : 'Pin this piece as the flex anchor'}
+              >
+                <MousePointer2 className="h-3.5 w-3.5"/>{flexAnchorUid === selectedItem.uid ? 'Flex anchor set' : 'Set flex anchor'}
+              </button>}
               {isExpansionTrack(partMap.get(selectedItem.partId)!) && <div>adjusted length {partLength(partMap.get(selectedItem.partId)!, selectedItem).toFixed(1)} mm</div>}
               {partMap.get(selectedItem.partId)?.kind === 'building' && (() => {
                 const disabled = isItemLocked(selectedItem);
